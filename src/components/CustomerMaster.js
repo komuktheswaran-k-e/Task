@@ -248,16 +248,21 @@ const CustomerMaster = () => {
           </div>
           <div className="form-group">
             <label>Job Frequency:</label>
-            <input
-              type="text"
-              name="jobFrequency"
-              placeholder="Enter Job Frequency"
-              onChange={handleChange}
-            />
+            <select name="active" onChange={handleChange}>
+              <option value="">Select Frequency</option>
+              <option value="Daily">Daily</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Fortnight">Fortnight</option>
+              <option value="Monthly">Monthly</option>
+              <option value="QuarterlyN">Quarterly</option>
+              <option value="HalfYearly">HalfYearly</option>
+              <option value="Annual">Annual</option>
+            </select>
           </div>
           <div className="form-group">
             <label>Active:</label>
             <select name="active" onChange={handleChange}>
+              <option value="">Select Active</option>
               <option value="Y">Yes</option>
               <option value="N">No</option>
             </select>

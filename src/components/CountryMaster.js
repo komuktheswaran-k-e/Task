@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./CountryMaster.css";
-import { v4 as uuidv4 } from "uuid";
 
 const CountryMaster = () => {
-  const [formData, setFormData] = useState({ CountryID: "", countryName: "" });
+  const [formData, setFormData] = useState({ CountryID: "", CountryName: "" });
   const [countries, setCountries] = useState([]);
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingID, setEditingID] = useState(null);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // Fetch countries from the database
   useEffect(() => {
@@ -16,10 +16,13 @@ const CountryMaster = () => {
 
   const fetchCountries = async () => {
     try {
+      setLoading(true);
       const response = await axios.get("http://localhost:5000/api/countries");
       setCountries(response.data);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching countries:", error);
+      setLoading(false);
     }
   };
 
@@ -31,23 +34,21 @@ const CountryMaster = () => {
   // Handle form submit (Add or Update)
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      if (editingIndex !== null) {
+      if (editingID) {
         // Update existing country
         const response = await axios.put(
-          `http://localhost:5000/api/countries/${formData.countryID}`,
-          formData
+          `http://localhost:5000/api/countries/${editingID}`,
+          { CountryName: formData.CountryName }
         );
         if (response.data.success) {
           setMessage("Country updated successfully!");
         }
       } else {
-        // Add new country with unique ID
-        const newCountry = { ...formData, CountryID: uuidv4() };
+        // Add new country
         const response = await axios.post(
           "http://localhost:5000/api/countries",
-          newCountry
+          { CountryName: formData.CountryName }
         );
         if (response.data.success) {
           setMessage("Country added successfully!");
@@ -59,20 +60,23 @@ const CountryMaster = () => {
       setMessage("Error saving country.");
     }
 
-    setFormData({ countryID: "", countryName: "" }); // Reset form
-    setEditingIndex(null);
+    setFormData({ CountryID: "", CountryName: "" }); // Reset form
+    setEditingID(null);
   };
 
   // Handle Edit
   const handleEdit = (country) => {
-    setFormData({ ...country });
-    setEditingIndex(country.CountryID);
+    setFormData({
+      CountryID: country.CountryID,
+      CountryName: country.CountryName,
+    });
+    setEditingID(country.CountryID);
   };
 
   // Handle Delete
   const handleDelete = async (CountryID) => {
     if (!CountryID) {
-      console.error("Error: countryID is undefined");
+      console.error("Error: CountryID is undefined");
       return;
     }
 
@@ -96,50 +100,50 @@ const CountryMaster = () => {
           <label>Country Name:</label>
           <input
             type="text"
-            name="countryName"
-            value={formData.countryName || ""}
+            name="CountryName"
+            value={formData.CountryName || ""}
             placeholder="Enter Country Name"
             onChange={handleChange}
             required
           />
         </div>
         <div className="form-group full-width">
-          <button type="submit">
-            {editingIndex !== null ? "Update" : "Submit"}
-          </button>
+          <button type="submit">{editingID ? "Update" : "Submit"}</button>
         </div>
       </form>
 
-      {countries.length > 0 && (
-        <div className="country-list">
-          <h3>Stored Countries</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Country Name</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {countries.map((country) => (
-                <tr key={country.CountryID}>
-                  <td>{country.CountryName}</td>
-                  <td>
-                    <button onClick={() => handleEdit(country.CountryID)}>
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(country.CountryID)}
-                      className="delete-btn"
-                    >
-                      Delete
-                    </button>
-                  </td>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        countries.length > 0 && (
+          <div className="country-list">
+            <h3>Stored Countries</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Country Name</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {countries.map((country) => (
+                  <tr key={country.CountryID}>
+                    <td>{country.CountryName}</td>
+                    <td>
+                      <button onClick={() => handleEdit(country)}>Edit</button>
+                      <button
+                        onClick={() => handleDelete(country.CountryID)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
     </div>
   );
