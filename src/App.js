@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import CustomerMaster from "./components/CustomerMaster";
+import CountryMaster from "./components/CountryMaster";
+import StateMaster from "./components/StateMaster";
+import JobMaster from "./components/JobMaster";
+import JobTypeMaster from "./components/JobTypeMaster";
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -59,11 +63,11 @@ export default function App() {
       <div className="content">
         <Routes>
           <Route path="/customer" element={<CustomerMaster />} />
-          <Route path="/state" element={<div>State Master</div>} />
-          <Route path="/country" element={<div>Country Master</div>} />
+          <Route path="/state" element={<StateMaster />} />
+          <Route path="/country" element={<CountryMaster />} />
           <Route path="/employee" element={<div>Employee Master</div>} />
-          <Route path="/job-type" element={<div>Job Type Master</div>} />
-          <Route path="/job" element={<div>Job Master</div>} />
+          <Route path="/job-type" element={<JobTypeMaster />} />
+          <Route path="/job" element={<JobMaster />} />
           <Route
             path="/customer-job"
             element={<div>Customer Job Master</div>}

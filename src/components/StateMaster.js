@@ -1,53 +1,76 @@
 import React, { useState, useEffect } from "react";
-import "./state.css"; // Ensure CSS is applied
+import axios from "axios";
+import "./state.css";
 
 const StateMaster = () => {
   const [formData, setFormData] = useState({
     stateID: "",
     stateName: "",
-    
   });
-
-  
   const [states, setStates] = useState([]);
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingStateID, setEditingStateID] = useState(null);
+  const [message, setMessage] = useState("");
 
+  useEffect(() => {
+    fetchStates();
+  }, []);
+
+  const fetchStates = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/states");
+      setStates(response.data);
+      console.log("States response:", response.data);
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (editingIndex !== null) {
-      // Update existing state
-      const updatedStates = [...states];
-      updatedStates[editingIndex] = formData;
-      setStates(updatedStates);
-      setEditingIndex(null);
-    } else {
-      // Add new state
-      setStates([...states, formData]);
+    try {
+      if (editingStateID) {
+        await axios.put(
+          `http://localhost:5000/api/states/${editingStateID}`,
+          formData
+        );
+        setMessage("State updated successfully!");
+      } else {
+        await axios.post("http://localhost:5000/api/states", formData);
+        setMessage("State added successfully!");
+      }
+      fetchStates();
+      setFormData({ stateID: "", stateName: "" });
+      setEditingStateID(null);
+    } catch (error) {
+      console.error("Error saving state:", error);
+      setMessage("Error saving state.");
     }
-
-    // Reset form
-    setFormData({ stateID: "", stateName: "" });
   };
 
-  const handleEdit = (index) => {
-    setFormData(states[index]);
-    setEditingIndex(index);
+  const handleEdit = (state) => {
+    setFormData({ stateID: state.stateID, stateName: state.stateName });
+    setEditingStateID(state.stateID);
   };
 
-  const handleDelete = (index) => {
-    const filteredStates = states.filter((_, i) => i !== index);
-    setStates(filteredStates);
+  const handleDelete = async (stateID) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/states/${stateID}`);
+      setMessage("State deleted successfully!");
+      fetchStates();
+    } catch (error) {
+      console.error("Error deleting state:", error);
+      setMessage("Error deleting state.");
+    }
   };
 
   return (
     <div className="state-container">
       <h2>State Master</h2>
+      {message && <p className="message">{message}</p>}
       <form className="state-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label>State ID:</label>
@@ -71,9 +94,8 @@ const StateMaster = () => {
             required
           />
         </div>
-        
         <div className="form-group full-width">
-          <button type="submit">{editingIndex !== null ? "Update" : "Submit"}</button>
+          <button type="submit">{editingStateID ? "Update" : "Submit"}</button>
         </div>
       </form>
 
@@ -84,21 +106,27 @@ const StateMaster = () => {
           <table>
             <thead>
               <tr>
-                
                 <th>State Name</th>
-                
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {states.map((state, index) => (
-                <tr key={index}>
-                  
-                  <td>{state.stateName}</td>
-                 
+              {states.map((state) => (
+                <tr key={state.stateID}>
+                  <td>{state.StateName}</td>
                   <td>
-                    <button className="edit-btn" onClick={() => handleEdit(index)}>Edit</button>
-                    <button className="delete-btn" onClick={() => handleDelete(index)}>Delete</button>
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEdit(state)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDelete(state.stateID)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}

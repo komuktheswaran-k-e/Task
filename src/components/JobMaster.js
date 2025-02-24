@@ -47,7 +47,6 @@ const JobMaster = () => {
     <div className="job-container">
       <h2>Job Master</h2>
       <form className="job-form" onSubmit={handleSubmit}>
-      
         <div className="form-group">
           <label>Job Name:</label>
           <input
@@ -59,9 +58,11 @@ const JobMaster = () => {
             required
           />
         </div>
-     
+
         <div className="form-group full-width">
-          <button type="submit">{editingIndex !== null ? "Update" : "Submit"}</button>
+          <button type="submit">
+            {editingIndex !== null ? "Update" : "Submit"}
+          </button>
         </div>
       </form>
 
@@ -73,20 +74,28 @@ const JobMaster = () => {
             <thead>
               <tr>
                 <th>Job Name</th>
-                
-                
+
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {jobs.map((job, index) => (
                 <tr key={index}>
-                  
                   <td>{job.jobName}</td>
-                  
+
                   <td>
-                    <button className="edit-btn" onClick={() => handleEdit(index)}>Edit</button>
-                    <button className="delete-btn" onClick={() => handleDelete(index)}>Delete</button>
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEdit(index)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDelete(index)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
