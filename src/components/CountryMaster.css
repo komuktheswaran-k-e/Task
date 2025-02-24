@@ -1,0 +1,126 @@
+/* Container for Form and Table */
+.country-container {
+    max-width: 400px;
+    margin: auto;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  h2 {
+    text-align: center;
+  }
+  
+  /* Form Styling */
+  .country-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .full-width {
+    grid-column: span 2;
+    text-align: center;
+  }
+  
+  label {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  input,
+  select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Buttons */
+  button {
+    padding: 10px;
+    background-color: #0056b3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  .delete-btn {
+    background: #dc3545;
+  }
+  
+  .delete-btn:hover {
+    background: #a71d2a;
+  }
+  
+  /* Table Styling */
+  .country-list {
+    margin-top: 20px;
+    max-width: 100%; /* Ensuring it doesn’t exceed container */
+    overflow-x: auto; /* Allows scrolling for small screens */
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  th, td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+  }
+  
+  th {
+    background: #007bff;
+    color: white;
+  }
+  
+  button {
+    margin: 2px;
+  }
+  
+  /* ✅ Responsive Design */
+  @media (max-width: 600px) {
+    .country-container {
+      max-width: 90%;
+      padding: 15px;
+    }
+  
+    .country-form {
+      grid-template-columns: 1fr; /* Stack form fields vertically */
+    }
+  
+    .full-width {
+      grid-column: span 1;
+    }
+  
+    table {
+      font-size: 14px; /* Adjust font size for small screens */
+    }
+  
+    th, td {
+      padding: 8px;
+    }
+  
+    button {
+      width: 100%; /* Full-width buttons for easier clicking */
+      padding: 8px;
+    }
+  }
+  
