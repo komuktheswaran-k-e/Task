@@ -4,8 +4,8 @@ import "./state.css";
 
 const StateMaster = () => {
   const [formData, setFormData] = useState({
-    stateID: "",
     stateName: "",
+    countryName: "",
   });
   const [states, setStates] = useState([]);
   const [editingStateID, setEditingStateID] = useState(null);
@@ -43,7 +43,7 @@ const StateMaster = () => {
         setMessage("State added successfully!");
       }
       fetchStates();
-      setFormData({ stateID: "", stateName: "" });
+      setFormData({ stateName: "", countryName: "" });
       setEditingStateID(null);
     } catch (error) {
       console.error("Error saving state:", error);
@@ -52,7 +52,10 @@ const StateMaster = () => {
   };
 
   const handleEdit = (state) => {
-    setFormData({ stateID: state.stateID, stateName: state.stateName });
+    setFormData({
+      stateName: state.stateName,
+      countryName: state.countryName,
+    });
     setEditingStateID(state.stateID);
   };
 
@@ -73,23 +76,23 @@ const StateMaster = () => {
       {message && <p className="message">{message}</p>}
       <form className="state-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>State ID:</label>
-          <input
-            type="text"
-            name="stateID"
-            value={formData.stateID}
-            placeholder="Enter State ID"
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
           <label>State Name:</label>
           <input
             type="text"
             name="stateName"
             value={formData.stateName}
             placeholder="Enter State Name"
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Country Name:</label>
+          <input
+            type="text"
+            name="countryName"
+            value={formData.countryName}
+            placeholder="Enter Country Name"
             onChange={handleChange}
             required
           />

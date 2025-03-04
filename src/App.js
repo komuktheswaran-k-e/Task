@@ -72,10 +72,6 @@ export default function App() {
             path="/customer-job"
             element={<div>Customer Job Master</div>}
           />
-          <Route
-            path="/audit-filing"
-            element={<div>Audit Filing Master</div>}
-          />
         </Routes>
       </div>
     </div>
