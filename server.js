@@ -3,6 +3,10 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { Sequelize, DataTypes, QueryTypes } = require("sequelize");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const moment = require("moment-timezone");
+
 
 const app = express();
 app.use(cors());
@@ -85,6 +89,40 @@ const User = sequelize.define(
   },
   { tableName: "Users", timestamps: false }
 );
+const Log = sequelize.define(
+  "Log",
+  {
+    logID: { type: DataTypes.INTEGER, 
+      primaryKey: true, 
+      autoIncrement: true },
+    employeeID: { 
+      type: DataTypes.STRING(50),  // ✅ Changed from INTEGER to STRING for employee codes like 'ads001'
+      allowNull: false 
+    },
+    logDate: { 
+      type: DataTypes.DATEONLY, // ✅ Stores only date (YYYY-MM-DD)
+      allowNull: false, 
+      defaultValue: Sequelize.literal("CAST(GETDATE() AS DATE)") 
+    },
+    loginTime: { 
+      type: DataTypes.TIME, // ✅ Stores only time (HH:mm:ss)
+      allowNull: false, 
+      defaultValue: Sequelize.literal("CONVERT(TIME, GETDATE())") 
+    },
+    logoutTime: { 
+      type: DataTypes.TIME, // ✅ Stores only time (HH:mm:ss)
+      allowNull: true 
+    },
+  },
+  { 
+    tableName: "Logs", 
+    timestamps: false 
+  }
+);
+
+module.exports = Log;
+
+
 
 sequelize.sync();
 
@@ -194,20 +232,73 @@ app.delete("/api/countries/:id", async (req, res) => {
   }
 });
 app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+  console.log(username,password)
+
   try {
-    const { username, password } = req.body;
+    
     const user = await User.findOne({ where: { username } });
 
-    if (!user) return res.status(401).json({ message: "User not found" });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid username or password" });
+    }
 
+    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid password" });
+    
 
-    const token = jwt.sign({ userId: user.id }, "your_secret_key", { expiresIn: "1h" });
-    res.json({ success: true, token });
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid username or password" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ userID: user.userID, username: user.username }, "secretkey", { expiresIn: "1h" });
+
+    
+
+    const logEntry = await Log.create({
+      employeeID: user.username,
+      logDate: moment().format("YYYY-MM-DD"), // ✅ Local Date
+      loginTime: moment().format("HH:mm:ss"), // ✅ Local Time
+    });
+    
+    
+    res.json({
+      success: true,
+      message: "Login successful",
+      token,
+      username: user.username,
+      logID: logEntry.logID, // Return log ID to track logout
+      
+    });
   } catch (error) {
-    res.status(500).json({ message: "Login Failed" });
+    
+    console.error("Error Details:", error);
+    
+    res.status(500).json({ message: "Server error", error });
   }
 });
+
+
+app.post("/api/logout", async (req, res) => {
+  const { logID } = req.body; // Frontend should send the logID
+
+  try {
+    const logEntry = await Log.findByPk(logID);
+    if (!logEntry) {
+      return res.status(404).json({ message: "Log entry not found" });
+    }
+
+    logEntry.logoutTime =moment().format("HH:mm:ss");
+    await logEntry.save();
+
+    res.json({ success: true, message: "Logout successful" });
+
+  } catch (error) {
+    console.error("Error updating logout time:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
 
 app.listen(5000, () => console.log("Server running on port 5000"));
