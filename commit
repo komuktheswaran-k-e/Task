@@ -1,0 +1,20 @@
+commit
+:wq
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Your branch is up to date with 'origin/main'.
+#
+# Changes to be committed:
+#	modified:   package-lock.json
+#	modified:   package.json
+#	modified:   server.js
+#	modified:   src/App.js
+#	modified:   src/components/CountryMaster.js
+#	modified:   src/components/CustomerMaster.css
+#	modified:   src/components/CustomerMaster.js
+#	modified:   src/components/JobMaster.js
+#	modified:   src/components/StateMaster.js
+#
