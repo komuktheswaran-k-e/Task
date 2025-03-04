@@ -5,6 +5,10 @@ import CountryMaster from "./components/CountryMaster";
 import StateMaster from "./components/StateMaster";
 import JobMaster from "./components/JobMaster";
 import JobTypeMaster from "./components/JobTypeMaster";
+import EmployeeMaster from "./components/EmployeeMaster";
+import CustomerJobMaster from "./components/CustomerJobMaster"
+
+
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -65,12 +69,12 @@ export default function App() {
           <Route path="/customer" element={<CustomerMaster />} />
           <Route path="/state" element={<StateMaster />} />
           <Route path="/country" element={<CountryMaster />} />
-          <Route path="/employee" element={<div>Employee Master</div>} />
+          <Route path="/employee" element={<EmployeeMaster/>} />
           <Route path="/job-type" element={<JobTypeMaster />} />
           <Route path="/job" element={<JobMaster />} />
           <Route
             path="/customer-job"
-            element={<div>Customer Job Master</div>}
+            element={<CustomerJobMaster/>}
           />
         </Routes>
       </div>

@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import "./jobtype.css"; // Ensure CSS is applied
+import "./jobMaster.css"; // Ensure CSS is applied
 
-const JobTypeMaster = () => {
+const JobMaster = () => {
   const [formData, setFormData] = useState({
+    jobID: "",
+    jobName: "",
     jobTypeID: "",
-    jobTypeName: "",
   });
 
-  const [jobTypes, setJobTypes] = useState([]);
+  const [jobs, setJobs] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
 
   const handleChange = (e) => {
@@ -18,78 +19,71 @@ const JobTypeMaster = () => {
     e.preventDefault();
 
     if (editingIndex !== null) {
-      // Update existing job type
-      const updatedJobTypes = [...jobTypes];
-      updatedJobTypes[editingIndex] = formData;
-      setJobTypes(updatedJobTypes);
+      // Update existing job
+      const updatedJobs = [...jobs];
+      updatedJobs[editingIndex] = formData;
+      setJobs(updatedJobs);
       setEditingIndex(null);
     } else {
-      // Add new job type
-      setJobTypes([...jobTypes, formData]);
+      // Add new job
+      setJobs([...jobs, formData]);
     }
 
     // Reset form
-    setFormData({ jobTypeID: "", jobTypeName: "" });
+    setFormData({ jobID: "", jobName: "", jobTypeID: "" });
   };
 
   const handleEdit = (index) => {
-    setFormData(jobTypes[index]);
+    setFormData(jobs[index]);
     setEditingIndex(index);
   };
 
   const handleDelete = (index) => {
-    const filteredJobTypes = jobTypes.filter((_, i) => i !== index);
-    setJobTypes(filteredJobTypes);
+    const filteredJobs = jobs.filter((_, i) => i !== index);
+    setJobs(filteredJobs);
   };
 
   return (
-    <div className="jobtype-container">
+    <div className="job-container">
       <h2>Job Type Master</h2>
-      <form className="jobtype-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Job Type ID:</label>
-          <input
-            type="text"
-            name="jobTypeID"
-            value={formData.jobTypeID}
-            placeholder="Enter Job Type ID"
-            onChange={handleChange}
-            required
-          />
-        </div>
+      <form className="job-form" onSubmit={handleSubmit}>
+      
         <div className="form-group">
           <label>Job Type Name:</label>
           <input
             type="text"
-            name="jobTypeName"
-            value={formData.jobTypeName}
+            name="jobName"
+            value={formData.jobName}
             placeholder="Enter Job Type Name"
             onChange={handleChange}
             required
           />
         </div>
+     
         <div className="form-group full-width">
           <button type="submit">{editingIndex !== null ? "Update" : "Submit"}</button>
         </div>
       </form>
 
-      {/* Display Job Type List */}
-      {jobTypes.length > 0 && (
-        <div className="jobtype-list">
-          <h3>Job Type List</h3>
+      {/* Display Job List */}
+      {jobs.length > 0 && (
+        <div className="job-list">
+          <h3>Job List</h3>
           <table>
             <thead>
               <tr>
-                
                 <th>Job Type Name</th>
+                
+                
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {jobTypes.map((jobType, index) => (
+              {jobs.map((job, index) => (
                 <tr key={index}>
-                 
-                  <td>{jobType.jobTypeName}</td>
+                  
+                  <td>{job.jobName}</td>
+                  
                   <td>
                     <button className="edit-btn" onClick={() => handleEdit(index)}>Edit</button>
                     <button className="delete-btn" onClick={() => handleDelete(index)}>Delete</button>
@@ -102,6 +96,4 @@ const JobTypeMaster = () => {
       )}
     </div>
   );
-};
-
-export default JobTypeMaster;
+};export default JobMaster;

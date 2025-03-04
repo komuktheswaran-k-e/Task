@@ -1,14 +1,18 @@
-import React, { useState } from "react";
-import "./jobMaster.css"; // Ensure CSS is applied
 
-const JobMaster = () => {
+
+
+import React, { useState } from "react";
+import "./jobtype.css"; // Ensure CSS is applied
+
+const JobTypeMaster = () => {
   const [formData, setFormData] = useState({
-    jobID: "",
-    jobName: "",
     jobTypeID: "",
+    jobTypeName: "",
+    frequency: "",
+    recurringDate: "",
   });
 
-  const [jobs, setJobs] = useState([]);
+  const [jobTypes, setJobTypes] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
 
   const handleChange = (e) => {
@@ -19,83 +23,112 @@ const JobMaster = () => {
     e.preventDefault();
 
     if (editingIndex !== null) {
-      // Update existing job
-      const updatedJobs = [...jobs];
-      updatedJobs[editingIndex] = formData;
-      setJobs(updatedJobs);
+      // Update existing job type
+      const updatedJobTypes = [...jobTypes];
+      updatedJobTypes[editingIndex] = formData;
+      setJobTypes(updatedJobTypes);
       setEditingIndex(null);
     } else {
-      // Add new job
-      setJobs([...jobs, formData]);
+      // Add new job type
+      setJobTypes([...jobTypes, formData]);
     }
 
     // Reset form
-    setFormData({ jobID: "", jobName: "", jobTypeID: "" });
+    setFormData({ jobTypeID: "", jobTypeName: "", frequency: "", recurringDate: "" });
   };
 
   const handleEdit = (index) => {
-    setFormData(jobs[index]);
+    setFormData(jobTypes[index]);
     setEditingIndex(index);
   };
 
   const handleDelete = (index) => {
-    const filteredJobs = jobs.filter((_, i) => i !== index);
-    setJobs(filteredJobs);
+    const filteredJobTypes = jobTypes.filter((_, i) => i !== index);
+    setJobTypes(filteredJobTypes);
   };
 
   return (
-    <div className="job-container">
+    <div className="jobtype-container">
       <h2>Job Master</h2>
-      <form className="job-form" onSubmit={handleSubmit}>
+      <form className="jobtype-form" onSubmit={handleSubmit}>
+        {/* Job Type Name */}
         <div className="form-group">
           <label>Job Name:</label>
           <input
             type="text"
-            name="jobName"
-            value={formData.jobName}
-            placeholder="Enter Job Name"
+            name="jobTypeName"
+            value={formData.jobTypeName}
+            placeholder="Enter Job  Name"
             onChange={handleChange}
             required
           />
         </div>
 
+        {/* Frequency Dropdown */}
+        <div className="form-group">
+          <label>Frequency:</label>
+          <select name="frequency" value={formData.frequency} onChange={handleChange} required>
+            <option value="">Select Frequency</option>
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Fortnightly">Fortnightly</option>
+            <option value="Monthly">Monthly</option>
+            <option value="Quarterly">Quarterly</option>
+            <option value="Half-Yearly">Half-Yearly</option>
+            <option value="Annually">Annually</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>JobType Name:</label>
+          <select name="frequency" value={formData.frequency} onChange={handleChange} required>
+            <option value="">Select Name</option>
+            <option value="Daily">****</option>
+            <option value="Weekly">yyyy</option>
+            
+          </select>
+        </div>
+
+        {/* Recurring Date (Enabled only if Frequency is selected) */}
+        <div className="form-group">
+          <label>Recurring Date:</label>
+          <input
+            type="date"
+            name="recurringDate"
+            value={formData.recurringDate}
+            onChange={handleChange}
+            disabled={!formData.frequency} // Disable input if no frequency is selected
+            required
+          />
+        </div>
+
+        {/* Submit Button */}
         <div className="form-group full-width">
-          <button type="submit">
-            {editingIndex !== null ? "Update" : "Submit"}
-          </button>
+          <button type="submit">{editingIndex !== null ? "Update" : "Submit"}</button>
         </div>
       </form>
 
-      {/* Display Job List */}
-      {jobs.length > 0 && (
-        <div className="job-list">
-          <h3>Job List</h3>
+      {/* Display Job Type List */}
+      {jobTypes.length > 0 && (
+        <div className="jobtype-list">
+          <h3>Job Master List</h3>
           <table>
             <thead>
               <tr>
-                <th>Job Name</th>
-
+                <th>Job  Name</th>
+                <th>Frequency</th>
+                <th>Recurring Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job, index) => (
+              {jobTypes.map((jobType, index) => (
                 <tr key={index}>
-                  <td>{job.jobName}</td>
-
+                  <td>{jobType.jobTypeName}</td>
+                  <td>{jobType.frequency}</td>
+                  <td>{jobType.recurringDate}</td>
                   <td>
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(index)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(index)}
-                    >
-                      Delete
-                    </button>
+                    <button className="edit-btn" onClick={() => handleEdit(index)}>Edit</button>
+                    <button className="delete-btn" onClick={() => handleDelete(index)}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -107,4 +140,15 @@ const JobMaster = () => {
   );
 };
 
-export default JobMaster;
+export default JobTypeMaster;
+       {/* <div className="form-group">
+          <label>Job Type ID:</label>
+          <input
+            type="text"
+            name="jobTypeID"
+            value={formData.jobTypeID}
+            placeholder="Enter Job Type ID"
+            onChange={handleChange}
+            required
+          />
+        </div> */}

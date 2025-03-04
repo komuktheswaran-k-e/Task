@@ -46,35 +46,19 @@ const Customer = sequelize.define("CustomerMasters", {
 });
 
 // Define CountryMaster Model
-const CountryMaster = sequelize.define(
-  "CountryMasters",
-  {
-    CountryID: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    CountryName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-  },
-  {
-    tableName: "CountryMasters", // Ensure correct table mapping
-    timestamps: false, // Disable Sequelize's automatic timestamps
-  }
-);
+const CountryMaster = sequelize.define("CountryMaster", {
+  CountryID: { type: DataTypes.INTEGER, primaryKey: true },
+  CountryName: { type: DataTypes.STRING, allowNull: false },
+});
 
-const StateMaster = sequelize.define(
-  "StateMasters",
-  {
-    StateID: { type: DataTypes.INTEGER, primaryKey: true },
-    StateName: { type: DataTypes.STRING, allowNull: false },
-    CountryID: { type: DataTypes.INTEGER, allowNull: false },
-  },
-  { tableName: "StateMasters", timestamps: false }
-);
+// Define StateMaster Model
+const StateMaster = sequelize.define("StateMaster", {
+  StateID: { type: DataTypes.INTEGER, primaryKey: true },
+  StateName: { type: DataTypes.STRING, allowNull: false },
+  CountryID: { type: DataTypes.INTEGER, allowNull: false },
+});
 
+// Sync Database
 sequelize.sync();
 
 // API Routes
@@ -127,60 +111,9 @@ app.get("/api/states/:countryID", async (req, res) => {
     });
     res.json(states);
   } catch (error) {
-    console.error("Database error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-app.post("/api/countries", async (req, res) => {
-  try {
-    const { CountryName } = req.body;
-    if (!CountryName) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Country Name is required" });
-    }
-    const newCountry = await CountryMaster.create({ CountryName });
-    res.json({ success: true, data: newCountry });
-  } catch (error) {
-    console.error("Database error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-app.put("/api/countries/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { CountryName } = req.body;
-    const country = await CountryMaster.findByPk(id);
-    if (!country) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Country not found" });
-    }
-    await country.update({ CountryName });
-    res.json({ success: true, message: "Country updated successfully" });
-  } catch (error) {
-    console.error("Database error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-app.delete("/api/countries/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const country = await CountryMaster.findByPk(id);
-    if (!country) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Country not found" });
-    }
-    await country.destroy();
-    res.json({ success: true, message: "Country deleted successfully" });
-  } catch (error) {
-    console.error("Database error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
+// Start Server
 app.listen(5000, () => console.log("Server running on port 5000"));
