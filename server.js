@@ -98,6 +98,16 @@ CountryMaster.hasMany(StateMaster, {
   sourceKey: "CountryID",
 });
 
+// Define JobTypeMaster Model
+const JobTypeMaster = sequelize.define(
+  "JobTypeMasters",
+  {
+    jobID: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    jobName: { type: DataTypes.STRING, allowNull: false },
+  },
+  { tableName: "JobTypeMasters", timestamps: false }
+);
+
 sequelize.sync();
 
 // API Routes
@@ -182,7 +192,6 @@ app.put("/api/states/:id", async (req, res) => {
   }
 });
 
-
 app.delete("/api/states/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -203,8 +212,6 @@ app.delete("/api/states/:id", async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
-
 
 app.post("/api/countries", async (req, res) => {
   try {
@@ -272,6 +279,62 @@ app.post("/api/login", async (req, res) => {
     res.json({ success: true, token });
   } catch (error) {
     res.status(500).json({ message: "Login Failed" });
+  }
+});
+
+// **Fetch all job types**
+app.get("/api/jobtypes", async (req, res) => {
+  try {
+    const jobs = await JobTypeMaster.findAll();
+    res.json(jobs);
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// **Create a new job type**
+app.post("/api/jobtypes", async (req, res) => {
+  try {
+    const { jobName } = req.body;
+    const newJob = await JobTypeMaster.create({ jobName });
+    res.json(newJob);
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// **Update job type**
+app.put("/api/jobtypes/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { jobName } = req.body;
+    const job = await JobTypeMaster.findByPk(id);
+    if (!job) {
+      return res.status(404).json({ error: "Job type not found" });
+    }
+    await job.update({ jobName });
+    res.json({ success: true, message: "Job type updated successfully" });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// **Delete job type**
+app.delete("/api/jobtypes/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const job = await JobTypeMaster.findByPk(id);
+    if (!job) {
+      return res.status(404).json({ error: "Job type not found" });
+    }
+    await job.destroy();
+    res.json({ success: true, message: "Job type deleted successfully" });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
