@@ -46,7 +46,11 @@ const Customer = sequelize.define("CustomerMasters", {
   active: { type: DataTypes.STRING },
   jobName: DataTypes.STRING,
   jobFrequency: DataTypes.STRING,
-});
+},
+{
+    tableName: "CustomerMasters", // Ensure correct table mapping
+    timestamps: false, // Disable Sequelize's automatic timestamps
+  });
 
 // Define CountryMaster Model
 const CountryMaster = sequelize.define(
@@ -102,11 +106,34 @@ CountryMaster.hasMany(StateMaster, {
 const JobTypeMaster = sequelize.define(
   "JobTypeMasters",
   {
-    jobID: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    jobName: { type: DataTypes.STRING, allowNull: false },
+    jobTypeID: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    jobTypeName: { type: DataTypes.STRING, allowNull: false },
   },
   { tableName: "JobTypeMasters", timestamps: false }
 );
+
+// Define JobMaster Model
+const JobMaster = sequelize.define(
+  "JobMasters",
+  {
+    jobID: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    jobTypeID: { type: DataTypes.INTEGER, allowNull: false },
+    jobName: { type: DataTypes.STRING, allowNull: false },
+    frequency: { type: DataTypes.STRING, allowNull: false },
+    recurringDate: { type: DataTypes.DATE },
+  },
+  { tableName: "JobMasters", timestamps: false }
+);
+
+// Establish relationship with JobTypeMaster
+JobMaster.belongsTo(JobTypeMaster, { foreignKey: "jobTypeID" });
+JobTypeMaster.hasMany(JobMaster, { foreignKey: "jobTypeID" });
+
+
 
 sequelize.sync();
 
@@ -296,8 +323,8 @@ app.get("/api/jobtypes", async (req, res) => {
 // **Create a new job type**
 app.post("/api/jobtypes", async (req, res) => {
   try {
-    const { jobName } = req.body;
-    const newJob = await JobTypeMaster.create({ jobName });
+    const { jobTypeName } = req.body;
+    const newJob = await JobTypeMaster.create({ jobTypeName });
     res.json(newJob);
   } catch (error) {
     console.error("Database error:", error);
@@ -309,12 +336,12 @@ app.post("/api/jobtypes", async (req, res) => {
 app.put("/api/jobtypes/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { jobName } = req.body;
+    const { jobTypeName } = req.body;
     const job = await JobTypeMaster.findByPk(id);
     if (!job) {
       return res.status(404).json({ error: "Job type not found" });
     }
-    await job.update({ jobName });
+    await job.update({ jobTypeName });
     res.json({ success: true, message: "Job type updated successfully" });
   } catch (error) {
     console.error("Database error:", error);
@@ -337,5 +364,82 @@ app.delete("/api/jobtypes/:id", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
+// API: Fetch all jobs with job type details
+app.get("/api/jobs", async (req, res) => {
+  try {
+    const jobs = await JobMaster.findAll({
+      include: [
+        {
+          model: JobTypeMaster,
+          attributes: ["jobTypeName"], // Fetch job type name
+        },
+      ],
+    });
+    res.json(jobs);
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+// API: Create a new job
+app.post("/api/jobs", async (req, res) => {
+  console.log("req.body", req.body);
+  try {
+    const { jobTypeID, jobName, frequency, recurringDate } = req.body;
+
+    if (!jobTypeID || !jobName || !frequency) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    const newJob = await JobMaster.create({
+      jobTypeID: parseInt(jobTypeID),
+      jobName,
+      frequency,
+      recurringDate,
+    });
+
+    res.status(201).json({ success: true, data: newJob });
+  } catch (error) {
+    console.error("Error adding job:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+// API: Update a job
+app.put("/api/jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { jobTypeID, jobName, frequency, recurringDate } = req.body;
+
+    const job = await JobMaster.findByPk(id);
+    if (!job) return res.status(404).json({ success: false, message: "Job not found" });
+
+    await job.update({ jobTypeID, jobName, frequency, recurringDate });
+    res.json({ success: true, message: "Job updated successfully" });
+  } catch (error) {
+    console.error("Error updating job:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+// API: Delete a job
+app.delete("/api/jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const job = await JobMaster.findByPk(id);
+    if (!job) return res.status(404).json({ success: false, message: "Job not found" });
+
+    await job.destroy();
+    res.json({ success: true, message: "Job deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting job:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+
 
 app.listen(5000, () => console.log("Server running on port 5000"));

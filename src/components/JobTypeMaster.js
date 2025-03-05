@@ -48,7 +48,7 @@ const JobMaster = () => {
         fetchJobs();
       }
 
-      setFormData({ jobName: "" });
+      setFormData({ jobTypeName: "" });
     } catch (error) {
       console.error("Error saving job:", error);
     }
@@ -57,7 +57,7 @@ const JobMaster = () => {
   // **Handle Edit Job Type**
   const handleEdit = (index) => {
     const job = jobs[index];
-    setFormData({ jobName: job.jobName });
+    setFormData({ jobTypeName: job.jobTypeName });
     setEditingIndex(index);
     setEditingJobId(job.jobID);
   };
@@ -80,8 +80,8 @@ const JobMaster = () => {
           <label>Job Type Name:</label>
           <input
             type="text"
-            name="jobName"
-            value={formData.jobName}
+            name="jobTypeName"
+            value={formData.jobTypeName}
             placeholder="Enter Job Type Name"
             onChange={handleChange}
             required
@@ -108,7 +108,7 @@ const JobMaster = () => {
             <tbody>
               {jobs.map((job, index) => (
                 <tr key={job.jobID}>
-                  <td>{job.jobName}</td>
+                  <td>{job.jobTypeName}</td>
                   <td>
                     <button
                       className="edit-btn"

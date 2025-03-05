@@ -1,73 +1,147 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./jobtype.css";
 
-
-
-import React, { useState } from "react";
-import "./jobtype.css"; // Ensure CSS is applied
-
-const JobTypeMaster = () => {
+const JobMaster = () => {
   const [formData, setFormData] = useState({
     jobTypeID: "",
-    jobTypeName: "",
+    jobName: "",
     frequency: "",
     recurringDate: "",
   });
-
+  const [jobs, setJobs] = useState([]);
   const [jobTypes, setJobTypes] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
 
+  // Fetch Job Types & Job Master List
+  useEffect(() => {
+    fetchJobTypes();
+    fetchJobs();
+  }, []);
+
+  const fetchJobTypes = () => {
+    axios
+      .get("http://localhost:5000/api/jobtypes")
+      .then((response) => setJobTypes(response.data))
+      .catch((error) => console.error("Error fetching job types:", error));
+  };
+
+  const fetchJobs = () => {
+    axios
+      .get("http://localhost:5000/api/jobs")
+      .then((response) => setJobs(response.data))
+      .catch((error) => console.error("Error fetching jobs:", error));
+  };
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (editingIndex !== null) {
-      // Update existing job type
-      const updatedJobTypes = [...jobTypes];
-      updatedJobTypes[editingIndex] = formData;
-      setJobTypes(updatedJobTypes);
-      setEditingIndex(null);
-    } else {
-      // Add new job type
-      setJobTypes([...jobTypes, formData]);
+    const jobTypeID = Number(formData.jobTypeID);
+    if (isNaN(jobTypeID) || jobTypeID === 0) {
+      alert("Invalid Job Type selected");
+      return;
     }
 
-    // Reset form
-    setFormData({ jobTypeID: "", jobTypeName: "", frequency: "", recurringDate: "" });
+    const newJob = {
+      jobTypeID,
+      jobName: formData.jobName,
+      frequency: formData.frequency,
+      recurringDate: formData.recurringDate,
+    };
+
+    if (editingIndex !== null) {
+      const jobId = jobs[editingIndex]?.jobID || jobs[editingIndex]?.id;
+      axios
+        .put(`http://localhost:5000/api/jobs/${jobId}`, newJob)
+        .then(() => {
+          fetchJobs(); // Fetch updated job list
+          resetForm();
+        })
+        .catch((error) => console.error("Error updating job:", error));
+    } else {
+      axios
+        .post("http://localhost:5000/api/jobs", newJob)
+        .then(() => {
+          fetchJobs(); // Fetch updated job list
+          resetForm();
+        })
+        .catch((error) => console.error("Error adding job:", error));
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      jobTypeID: "",
+      jobName: "",
+      frequency: "",
+      recurringDate: "",
+    });
+    setEditingIndex(null);
   };
 
   const handleEdit = (index) => {
-    setFormData(jobTypes[index]);
+    const job = jobs[index];
+    setFormData({
+      jobTypeID: String(job.jobTypeID),
+      jobName: job.jobName,
+      frequency: job.frequency,
+      recurringDate: job.recurringDate,
+    });
     setEditingIndex(index);
   };
 
   const handleDelete = (index) => {
-    const filteredJobTypes = jobTypes.filter((_, i) => i !== index);
-    setJobTypes(filteredJobTypes);
+    const jobId = jobs[index]?.jobID || jobs[index]?.id;
+    axios
+      .delete(`http://localhost:5000/api/jobs/${jobId}`)
+      .then(() => fetchJobs()) // Fetch updated job list
+      .catch((error) => console.error("Error deleting job:", error));
   };
 
   return (
     <div className="jobtype-container">
       <h2>Job Master</h2>
       <form className="jobtype-form" onSubmit={handleSubmit}>
-        {/* Job Type Name */}
+        <div className="form-group">
+          <label>Job Type:</label>
+          <select
+            name="jobTypeID"
+            value={formData.jobTypeID}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Select Job Type</option>
+            {jobTypes.map((type) => (
+              <option key={type.jobTypeID} value={type.jobTypeID}>
+                {type.jobTypeName}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="form-group">
           <label>Job Name:</label>
           <input
             type="text"
-            name="jobTypeName"
-            value={formData.jobTypeName}
-            placeholder="Enter Job  Name"
+            name="jobName"
+            value={formData.jobName}
             onChange={handleChange}
             required
           />
         </div>
 
-        {/* Frequency Dropdown */}
         <div className="form-group">
           <label>Frequency:</label>
-          <select name="frequency" value={formData.frequency} onChange={handleChange} required>
+          <select
+            name="frequency"
+            value={formData.frequency}
+            onChange={handleChange}
+            required
+          >
             <option value="">Select Frequency</option>
             <option value="Daily">Daily</option>
             <option value="Weekly">Weekly</option>
@@ -78,17 +152,7 @@ const JobTypeMaster = () => {
             <option value="Annually">Annually</option>
           </select>
         </div>
-        <div className="form-group">
-          <label>JobType Name:</label>
-          <select name="frequency" value={formData.frequency} onChange={handleChange} required>
-            <option value="">Select Name</option>
-            <option value="Daily">****</option>
-            <option value="Weekly">yyyy</option>
-            
-          </select>
-        </div>
 
-        {/* Recurring Date (Enabled only if Frequency is selected) */}
         <div className="form-group">
           <label>Recurring Date:</label>
           <input
@@ -96,39 +160,46 @@ const JobTypeMaster = () => {
             name="recurringDate"
             value={formData.recurringDate}
             onChange={handleChange}
-            disabled={!formData.frequency} // Disable input if no frequency is selected
             required
           />
         </div>
 
-        {/* Submit Button */}
-        <div className="form-group full-width">
-          <button type="submit">{editingIndex !== null ? "Update" : "Submit"}</button>
-        </div>
+        <button type="submit">
+          {editingIndex !== null ? "Update" : "Submit"}
+        </button>
       </form>
 
-      {/* Display Job Type List */}
-      {jobTypes.length > 0 && (
+      {jobs.length > 0 && (
         <div className="jobtype-list">
           <h3>Job Master List</h3>
           <table>
             <thead>
               <tr>
-                <th>Job  Name</th>
+                <th>Job Name</th>
                 <th>Frequency</th>
                 <th>Recurring Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {jobTypes.map((jobType, index) => (
+              {jobs.map((job, index) => (
                 <tr key={index}>
-                  <td>{jobType.jobTypeName}</td>
-                  <td>{jobType.frequency}</td>
-                  <td>{jobType.recurringDate}</td>
+                  <td>{job.jobName}</td>
+                  <td>{job.frequency}</td>
+                  <td>{job.recurringDate}</td>
                   <td>
-                    <button className="edit-btn" onClick={() => handleEdit(index)}>Edit</button>
-                    <button className="delete-btn" onClick={() => handleDelete(index)}>Delete</button>
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEdit(index)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDelete(index)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -140,15 +211,4 @@ const JobTypeMaster = () => {
   );
 };
 
-export default JobTypeMaster;
-       {/* <div className="form-group">
-          <label>Job Type ID:</label>
-          <input
-            type="text"
-            name="jobTypeID"
-            value={formData.jobTypeID}
-            placeholder="Enter Job Type ID"
-            onChange={handleChange}
-            required
-          />
-        </div> */}
+export default JobMaster;
