@@ -89,6 +89,15 @@ const User = sequelize.define(
   { tableName: "Users", timestamps: false }
 );
 
+StateMaster.belongsTo(CountryMaster, {
+  foreignKey: "CountryID",
+  targetKey: "CountryID",
+});
+CountryMaster.hasMany(StateMaster, {
+  foreignKey: "CountryID",
+  sourceKey: "CountryID",
+});
+
 sequelize.sync();
 
 // API Routes
@@ -110,7 +119,7 @@ app.get("/api/customers", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
+//list all countries
 app.get("/api/countries", async (req, res) => {
   try {
     const countries = await CountryMaster.findAll();
@@ -120,11 +129,17 @@ app.get("/api/countries", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
+//list states
 app.get("/api/states", async (req, res) => {
   try {
     const states = await StateMaster.findAll({
-      attributes: ["StateID", "StateName"],
+      attributes: ["StateID", "StateName", "CountryID"],
+      include: [
+        {
+          model: CountryMaster,
+          attributes: ["CountryName"], // ✅ Fetching CountryName
+        },
+      ],
     });
     res.json(states);
   } catch (error) {
@@ -132,7 +147,7 @@ app.get("/api/states", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
+//list states with countries
 app.get("/api/states/:countryID", async (req, res) => {
   try {
     const { countryID } = req.params;
@@ -144,6 +159,52 @@ app.get("/api/states/:countryID", async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+app.put("/api/states/:id", async (req, res) => {
+  console.log("req.params", req.params);
+  try {
+    const { id } = req.params;
+    const { StateName, CountryID } = req.body;
+
+    const state = await StateMaster.findByPk(id);
+    if (!state) {
+      return res
+        .status(404)
+        .json({ success: false, message: "State not found" });
+    }
+
+    await state.update({ StateName, CountryID });
+    console.log("state", state);
+    res.json({ success: true, message: "State updated successfully" });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+
+app.delete("/api/states/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the state by primary key
+    const state = await StateMaster.findByPk(id);
+    if (!state) {
+      return res
+        .status(404)
+        .json({ success: false, message: "State not found" });
+    }
+
+    // Delete the state
+    await state.destroy();
+    res.json({ success: true, message: "State deleted successfully" });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+
 
 app.post("/api/countries", async (req, res) => {
   try {

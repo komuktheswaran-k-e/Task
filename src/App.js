@@ -111,16 +111,70 @@ const App = () => {
 
       <div className="content">
         <Routes>
-          <Route path="/customer" element={<CustomerMaster />} />
-          <Route path="/state" element={<StateMaster />} />
-          <Route path="/country" element={<CountryMaster />} />
-          <Route path="/employee" element={<EmployeeMaster />} />
-          <Route path="/job-type" element={<JobTypeMaster />} />
-          <Route path="/job" element={<JobMaster />} />
-          <Route path="/customer-job" element={<CustomerJobMaster />} />
+          <Route path="/" element={<Login setToken={setToken} />} />
+          <Route
+            path="/customer"
+            element={
+              <ProtectedRoute>
+                <CustomerMaster />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/state"
+            element={
+              <ProtectedRoute>
+                <StateMaster />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/country"
+            element={
+              <ProtectedRoute>
+                <CountryMaster />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employee"
+            element={
+              <ProtectedRoute>
+                <EmployeeMaster />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/job-type"
+            element={
+              <ProtectedRoute>
+                <JobTypeMaster />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/job"
+            element={
+              <ProtectedRoute>
+                <JobMaster />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-job"
+            element={
+              <ProtectedRoute>
+                <CustomerJobMaster />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/audit-filing"
-            element={<div>Audit Filing Master</div>}
+            element={
+              <ProtectedRoute>
+                <div>Audit Filing Master</div>
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </div>
