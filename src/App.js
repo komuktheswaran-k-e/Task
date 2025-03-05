@@ -26,7 +26,9 @@ const App = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/api/logout", { logID });
+      const response = await axios.post("http://localhost:5000/api/logout", {
+        logID,
+      });
       console.log("Logout response:", response.data);
 
       // Clear localStorage & Update State
@@ -44,45 +46,60 @@ const App = () => {
     const handleTabClose = () => {
       const logID = localStorage.getItem("logID");
       if (!logID) return;
-  
+
       const logoutURL = "http://localhost:5000/api/logout";
       const data = JSON.stringify({ logID });
-  
+
       navigator.sendBeacon(logoutURL, data);
-  
+
       // ✅ Remove token & Update State
       localStorage.removeItem("logID");
       localStorage.removeItem("token");
       setToken(null); // ✅ Update state to reflect logout
     };
-  
+
     window.addEventListener("beforeunload", handleTabClose);
-  
+
     return () => {
       window.removeEventListener("beforeunload", handleTabClose);
     };
   }, []);
-  
 
   return (
     <div className="container">
       {/* ✅ Show Menu & Logout Only If Logged In */}
       {token ? (
         <>
-          <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)}>
+          <button
+            className="menu-button"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
             ☰ Menu
           </button>
           {menuOpen && (
             <nav className="menu">
               <ul>
-                <li><Link to="/customer">Customer details</Link></li>
-                <li><Link to="/state">State Master</Link></li>
-                <li><Link to="/country">Country Master</Link></li>
-                <li><Link to="/employee">Employee Master</Link></li>
-                <li><Link to="/job-type">Job Type Master</Link></li>
-                <li><Link to="/job">Job Master</Link></li>
-                <li><Link to="/customer-job">Customer Job Master</Link></li>
-                <li><Link to="/audit-filing">Audit Filing Master</Link></li>
+                <li>
+                  <Link to="/customer">Customer details</Link>
+                </li>
+                <li>
+                  <Link to="/state">State Master</Link>
+                </li>
+                <li>
+                  <Link to="/country">Country Master</Link>
+                </li>
+                <li>
+                  <Link to="/employee">Employee Master</Link>
+                </li>
+                <li>
+                  <Link to="/job-type">Job Type Master</Link>
+                </li>
+                <li>
+                  <Link to="/job">Job Master</Link>
+                </li>
+                <li>
+                  <Link to="/customer-job">Customer Job Master</Link>
+                </li>
               </ul>
             </nav>
           )}
@@ -97,13 +114,10 @@ const App = () => {
           <Route path="/customer" element={<CustomerMaster />} />
           <Route path="/state" element={<StateMaster />} />
           <Route path="/country" element={<CountryMaster />} />
-          <Route path="/employee" element={<EmployeeMaster/>} />
+          <Route path="/employee" element={<EmployeeMaster />} />
           <Route path="/job-type" element={<JobTypeMaster />} />
           <Route path="/job" element={<JobMaster />} />
-          <Route
-            path="/customer-job"
-            element={<CustomerJobMaster/>}
-          />
+          <Route path="/customer-job" element={<CustomerJobMaster />} />
           <Route
             path="/audit-filing"
             element={<div>Audit Filing Master</div>}

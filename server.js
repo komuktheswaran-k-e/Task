@@ -7,7 +7,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const moment = require("moment-timezone");
 
-
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
@@ -206,7 +205,9 @@ app.post("/api/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: "Invalid password" });
 
-    const token = jwt.sign({ userId: user.id }, "your_secret_key", { expiresIn: "1h" });
+    const token = jwt.sign({ userId: user.id }, "your_secret_key", {
+      expiresIn: "1h",
+    });
     res.json({ success: true, token });
   } catch (error) {
     res.status(500).json({ message: "Login Failed" });
