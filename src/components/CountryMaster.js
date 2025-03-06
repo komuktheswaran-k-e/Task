@@ -17,7 +17,7 @@ const CountryMaster = () => {
   const fetchCountries = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/countries");
+      const response = await axios.get("api/countries");
       setCountries(response.data);
       setLoading(false);
     } catch (error) {
@@ -38,7 +38,7 @@ const CountryMaster = () => {
       if (editingID) {
         // Update existing country
         const response = await axios.put(
-          `http://localhost:5000/api/countries/${editingID}`,
+          `api/countries/${editingID}`,
           { CountryName: formData.CountryName }
         );
         if (response.data.success) {
@@ -47,7 +47,7 @@ const CountryMaster = () => {
       } else {
         // Add new country
         const response = await axios.post(
-          "http://localhost:5000/api/countries",
+          "api/countries",
           { CountryName: formData.CountryName }
         );
         if (response.data.success) {
@@ -81,7 +81,7 @@ const CountryMaster = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:5000/api/countries/${CountryID}`);
+      await axios.delete(`api/countries/${CountryID}`);
       setMessage("Country deleted successfully!");
       fetchCountries(); // Refresh the list
     } catch (error) {

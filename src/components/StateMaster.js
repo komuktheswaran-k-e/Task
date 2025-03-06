@@ -27,7 +27,7 @@ const StateMaster = () => {
 
   const fetchStates = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/states");
+      const response = await axios.get("/api/states");
       setStates(response.data);
       console.log("Fetched States:", response.data);
     } catch (error) {
@@ -37,7 +37,7 @@ const StateMaster = () => {
 
   const fetchCountries = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/countries");
+      const response = await axios.get("/api/countries");
       setCountries(response.data);
       console.log("Fetched Countries:", response.data);
     } catch (error) {
@@ -52,21 +52,18 @@ const StateMaster = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Form Data:", selectedState);
-     const updatedState = {
-       StateName: selectedState.stateName, // Ensure it matches backend field
-       CountryID: selectedState.CountryID,
+    const updatedState = {
+      StateName: selectedState.stateName, // Ensure it matches backend field
+      CountryID: selectedState.CountryID,
     };
     console.log("Updated State:", updatedState);
 
     try {
       if (editingStateID) {
-        await axios.put(
-          `http://localhost:5000/api/states/${editingStateID}`,
-          updatedState
-        );
+        await axios.put(`api/states/${editingStateID}`, updatedState);
         setMessage("State updated successfully!");
       } else {
-        await axios.post("http://localhost:5000/api/states", selectedState);
+        await axios.post("api/states", selectedState);
         setMessage("State added successfully!");
       }
 
@@ -97,7 +94,7 @@ const StateMaster = () => {
 
     console.log("Deleting state with ID:", stateID);
     try {
-      await axios.delete(`http://localhost:5000/api/states/${stateID}`);
+      await axios.delete(`api/states/${stateID}`);
       setMessage("State deleted successfully!");
       fetchStates();
     } catch (error) {

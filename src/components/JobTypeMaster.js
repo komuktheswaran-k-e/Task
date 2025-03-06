@@ -11,7 +11,7 @@ const JobMaster = () => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingJobId, setEditingJobId] = useState(null);
 
-  const API_URL = "http://localhost:5000/api/jobtypes"; // Adjust if your backend runs on a different port
+  const API_URL = "/api/jobtypes"; // Adjust if your backend runs on a different port
 
   // **Fetch Job Types from API**
   useEffect(() => {

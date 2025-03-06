@@ -26,7 +26,7 @@ const App = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/api/logout", {
+      const response = await axios.post("/api/logout", {
         logID,
       });
       console.log("Logout response:", response.data);
@@ -47,7 +47,7 @@ const App = () => {
       const logID = localStorage.getItem("logID");
       if (!logID) return;
 
-      const logoutURL = "http://localhost:5000/api/logout";
+      const logoutURL = "api/logout";
       const data = JSON.stringify({ logID });
 
       navigator.sendBeacon(logoutURL, data);

@@ -30,27 +30,30 @@ sequelize
   .catch((err) => console.error("DB Connection Error:", err));
 
 // Define Models
-const Customer = sequelize.define("CustomerMasters", {
-  customerID: { type: DataTypes.STRING },
-  customerName: { type: DataTypes.STRING, allowNull: false },
-  address1: DataTypes.STRING,
-  address2: DataTypes.STRING,
-  address3: DataTypes.STRING,
-  city: DataTypes.STRING,
-  stateID: DataTypes.STRING,
-  countryID: DataTypes.INTEGER,
-  pincode: DataTypes.STRING,
-  gstNo: DataTypes.STRING,
-  mobileNo: { type: DataTypes.STRING, allowNull: false },
-  emailID: DataTypes.STRING,
-  active: { type: DataTypes.STRING },
-  jobName: DataTypes.STRING,
-  jobFrequency: DataTypes.STRING,
-},
-{
+const Customer = sequelize.define(
+  "CustomerMasters",
+  {
+    customerID: { type: DataTypes.STRING, primaryKey: true },
+    customerName: { type: DataTypes.STRING, allowNull: false },
+    address1: DataTypes.STRING,
+    address2: DataTypes.STRING,
+    address3: DataTypes.STRING,
+    city: DataTypes.STRING,
+    stateID: DataTypes.STRING,
+    countryID: DataTypes.INTEGER,
+    pincode: DataTypes.STRING,
+    gstNo: DataTypes.STRING,
+    mobileNo: { type: DataTypes.STRING, allowNull: false },
+    emailID: DataTypes.STRING,
+    active: { type: DataTypes.STRING },
+    jobName: DataTypes.STRING,
+    jobFrequency: DataTypes.STRING,
+  },
+  {
     tableName: "CustomerMasters", // Ensure correct table mapping
     timestamps: false, // Disable Sequelize's automatic timestamps
-  });
+  }
+);
 
 // Define CountryMaster Model
 const CountryMaster = sequelize.define(
@@ -133,7 +136,46 @@ const JobMaster = sequelize.define(
 JobMaster.belongsTo(JobTypeMaster, { foreignKey: "jobTypeID" });
 JobTypeMaster.hasMany(JobMaster, { foreignKey: "jobTypeID" });
 
+// Define CustomerJobMaster Model
+const CustomerJobMaster = sequelize.define(
+  "CustomerJobMaster",
+  {
+    customerJobID: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    customerID: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: { model: Customer, key: "customerID" },
+    },
+    jobID: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: JobMaster, key: "jobID" },
+    },
+    jobFrequency: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    jobDate: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    employeeID: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: User, key: "id" },
+    },
+  },
+  { tableName: "CustomerJobMaster", timestamps: false }
+);
 
+// Define relationships
+CustomerJobMaster.belongsTo(Customer, { foreignKey: "customerID" });
+CustomerJobMaster.belongsTo(JobMaster, { foreignKey: "jobID" });
+CustomerJobMaster.belongsTo(User, { foreignKey: "employeeID" });
 
 sequelize.sync();
 
@@ -365,7 +407,6 @@ app.delete("/api/jobtypes/:id", async (req, res) => {
   }
 });
 
-
 // API: Fetch all jobs with job type details
 app.get("/api/jobs", async (req, res) => {
   try {
@@ -391,7 +432,9 @@ app.post("/api/jobs", async (req, res) => {
     const { jobTypeID, jobName, frequency, recurringDate } = req.body;
 
     if (!jobTypeID || !jobName || !frequency) {
-      return res.status(400).json({ success: false, message: "Missing required fields" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
     }
 
     const newJob = await JobMaster.create({
@@ -415,7 +458,8 @@ app.put("/api/jobs/:id", async (req, res) => {
     const { jobTypeID, jobName, frequency, recurringDate } = req.body;
 
     const job = await JobMaster.findByPk(id);
-    if (!job) return res.status(404).json({ success: false, message: "Job not found" });
+    if (!job)
+      return res.status(404).json({ success: false, message: "Job not found" });
 
     await job.update({ jobTypeID, jobName, frequency, recurringDate });
     res.json({ success: true, message: "Job updated successfully" });
@@ -430,7 +474,8 @@ app.delete("/api/jobs/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const job = await JobMaster.findByPk(id);
-    if (!job) return res.status(404).json({ success: false, message: "Job not found" });
+    if (!job)
+      return res.status(404).json({ success: false, message: "Job not found" });
 
     await job.destroy();
     res.json({ success: true, message: "Job deleted successfully" });
@@ -440,6 +485,89 @@ app.delete("/api/jobs/:id", async (req, res) => {
   }
 });
 
+app.get("/api/customer-jobs", async (req, res) => {
+  try {
+    const customerJobs = await CustomerJobMaster.findAll({
+      include: [
+        { model: Customer, attributes: ["customerID", "customerName"] },
+        { model: JobMaster, attributes: ["jobID", "jobName"] },
+        { model: User, attributes: ["id", "username"] },
+      ],
+    });
+    res.json(customerJobs);
+  } catch (error) {
+    console.error("Error fetching customer jobs:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+  console.log("res", res);
+});
 
+// Fetch employees for dropdown
+app.get("/api/employees", async (req, res) => {
+  try {
+    const employees = await User.findAll({
+      attributes: ["id", "username"],
+    });
+    res.json(employees);
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+// Add a new Customer Job
+app.post("/api/customer-jobs", async (req, res) => {
+  try {
+    const { customerID, jobID, jobFrequency, jobDate, employeeID } = req.body;
+    const newCustomerJob = await CustomerJobMaster.create({
+      customerID,
+      jobID,
+      jobFrequency,
+      jobDate,
+      employeeID,
+    });
+    res.json({ success: true, data: newCustomerJob });
+  } catch (error) {
+    console.error("Error adding customer job:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Update an existing Customer Job
+app.put("/api/customer-jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { customerID, jobID, jobFrequency, jobDate, employeeID } = req.body;
+    const job = await CustomerJobMaster.findByPk(id);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+    await job.update({ customerID, jobID, jobFrequency, jobDate, employeeID });
+    res.json({ success: true, message: "Job updated successfully" });
+  } catch (error) {
+    console.error("Error updating job:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Delete a Customer Job
+app.delete("/api/customer-jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const job = await CustomerJobMaster.findByPk(id);
+    if (!job) {
+      return res.status(404).json({ success: false, message: "Job not found" });
+    }
+    await job.destroy();
+    res.json({ success: true, message: "Job deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting job:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+const PORT = process.env.PORT || 0; // 0 allows the OS to assign an available port
+
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${server.address().port}`);
+});

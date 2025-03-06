@@ -2,18 +2,21 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "./style.css"; 
+import "./style.css";
 import { useNavigate } from "react-router-dom";
 
 const Login = ({ setToken }) => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:5000/api/login", { username, password });
+      const response = await axios.post("localhost:51022/api/login", {
+        username,
+        password,
+      });
       console.log(response);
       if (response.data.success) {
         toast.success("Login Successful!");
@@ -21,7 +24,7 @@ const Login = ({ setToken }) => {
         localStorage.setItem("username", response.data.username);
         localStorage.setItem("logID", response.data.logID);
         setToken(response.data.token); // ✅ Update App.js state
-        navigate("/customer"); 
+        navigate("/customer");
       } else {
         toast.error(response.data.message);
       }

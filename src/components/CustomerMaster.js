@@ -34,7 +34,7 @@ const CustomerMaster = () => {
 
   const fetchCountries = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/countries");
+      const response = await axios.get("api/countries");
       setCountries(response.data);
     } catch (error) {
       console.error("Error fetching countries:", error);
@@ -45,7 +45,7 @@ const CustomerMaster = () => {
     try {
       console.log("Fetching states for country:", countryID);
       const response = await axios.get(
-        `http://localhost:5000/api/states/${countryID}`
+        `api/states/${countryID}`
       );
       console.log("States response:", response.data);
       setStates(response.data);
@@ -56,7 +56,7 @@ const CustomerMaster = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/customers");
+      const response = await axios.get("api/customers");
       setCustomers(response.data);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -96,7 +96,7 @@ const CustomerMaster = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:5000/api/customers", {
+      const response = await axios.post("/api/customers", {
         customerID,
         ...formData,
       });

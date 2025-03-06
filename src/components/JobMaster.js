@@ -21,14 +21,14 @@ const JobMaster = () => {
 
   const fetchJobTypes = () => {
     axios
-      .get("http://localhost:5000/api/jobtypes")
+      .get("api/jobtypes")
       .then((response) => setJobTypes(response.data))
       .catch((error) => console.error("Error fetching job types:", error));
   };
 
   const fetchJobs = () => {
     axios
-      .get("http://localhost:5000/api/jobs")
+      .get("api/jobs")
       .then((response) => setJobs(response.data))
       .catch((error) => console.error("Error fetching jobs:", error));
   };
@@ -56,7 +56,7 @@ const JobMaster = () => {
     if (editingIndex !== null) {
       const jobId = jobs[editingIndex]?.jobID || jobs[editingIndex]?.id;
       axios
-        .put(`http://localhost:5000/api/jobs/${jobId}`, newJob)
+        .put(`/api/jobs/${jobId}`, newJob)
         .then(() => {
           fetchJobs(); // Fetch updated job list
           resetForm();
@@ -64,7 +64,7 @@ const JobMaster = () => {
         .catch((error) => console.error("Error updating job:", error));
     } else {
       axios
-        .post("http://localhost:5000/api/jobs", newJob)
+        .post("/api/jobs", newJob)
         .then(() => {
           fetchJobs(); // Fetch updated job list
           resetForm();
@@ -97,7 +97,7 @@ const JobMaster = () => {
   const handleDelete = (index) => {
     const jobId = jobs[index]?.jobID || jobs[index]?.id;
     axios
-      .delete(`http://localhost:5000/api/jobs/${jobId}`)
+      .delete(`/api/jobs/${jobId}`)
       .then(() => fetchJobs()) // Fetch updated job list
       .catch((error) => console.error("Error deleting job:", error));
   };
