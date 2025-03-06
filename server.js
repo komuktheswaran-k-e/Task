@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const { Sequelize, DataTypes, QueryTypes } = require("sequelize");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const macaddress = require("macaddress");
 const moment = require("moment-timezone");
 
 
@@ -92,11 +93,13 @@ const User = sequelize.define(
 const Log = sequelize.define(
   "Log",
   {
-    logID: { type: DataTypes.INTEGER, 
+    logID: { 
+      type: DataTypes.INTEGER, 
       primaryKey: true, 
-      autoIncrement: true },
+      autoIncrement: true 
+    },
     employeeID: { 
-      type: DataTypes.STRING(50),  // ✅ Changed from INTEGER to STRING for employee codes like 'ads001'
+      type: DataTypes.STRING(50), // ✅ Employee codes like 'ads001'
       allowNull: false 
     },
     logDate: { 
@@ -105,13 +108,17 @@ const Log = sequelize.define(
       defaultValue: Sequelize.literal("CAST(GETDATE() AS DATE)") 
     },
     loginTime: { 
-      type: DataTypes.TIME, // ✅ Stores only time (HH:mm:ss)
+      type: DataTypes.DATE, // ✅ Stores both date and time
       allowNull: false, 
-      defaultValue: Sequelize.literal("CONVERT(TIME, GETDATE())") 
+      defaultValue: Sequelize.literal("GETDATE()") // ✅ Stores current timestamp
     },
     logoutTime: { 
-      type: DataTypes.TIME, // ✅ Stores only time (HH:mm:ss)
+      type: DataTypes.DATE, // ✅ Stores both date and time
       allowNull: true 
+    },
+    macAddress: {  // ✅ Add MAC Address field
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   { 
@@ -121,6 +128,17 @@ const Log = sequelize.define(
 );
 
 module.exports = Log;
+
+const Company = sequelize.define("company_details", {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  header: { type: DataTypes.STRING, allowNull: false },
+  footer: { type: DataTypes.STRING, allowNull: false }, // ✅ Ensure footer exists
+}, { 
+  tableName: "company_details", 
+  timestamps: false 
+});
+
+module.exports = Company;
 
 
 
@@ -254,12 +272,14 @@ app.post("/api/login", async (req, res) => {
     // Generate JWT token
     const token = jwt.sign({ userID: user.userID, username: user.username }, "secretkey", { expiresIn: "1h" });
 
-    
+    const macAddr = await macaddress.one();
+    console.log("MAC Address:", macAddr);
 
     const logEntry = await Log.create({
       employeeID: user.username,
       logDate: moment().format("YYYY-MM-DD"), // ✅ Local Date
-      loginTime: moment().format("HH:mm:ss"), // ✅ Local Time
+      loginTime:Sequelize.literal("FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss')"),// ✅ Local Time
+      macAddress: macAddr, 
     });
     
     
@@ -289,13 +309,26 @@ app.post("/api/logout", async (req, res) => {
       return res.status(404).json({ message: "Log entry not found" });
     }
 
-    logEntry.logoutTime =moment().format("HH:mm:ss");
+    logEntry.logoutTime = Sequelize.literal("FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss')");
+
     await logEntry.save();
 
     res.json({ success: true, message: "Logout successful" });
 
   } catch (error) {
     console.error("Error updating logout time:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+app.get("/api/company", async (req, res) => {
+  try {
+    const company = await Company.findOne(); // ✅ Ensure table has at least 1 record
+    if (!company) {
+      return res.status(404).json({ message: "Company details not found" });
+    }
+    res.json({ header: company.header, footer: company.footer });
+  } catch (error) {
+    console.error("Database Error:", error);
     res.status(500).json({ message: "Server error", error });
   }
 });

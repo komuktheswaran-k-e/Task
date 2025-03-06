@@ -3,6 +3,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./style.css"; 
+import Header from "./header";
+import Footer from "./footer";
 import { useNavigate } from "react-router-dom";
 
 const Login = ({ setToken }) => {
@@ -31,6 +33,9 @@ const Login = ({ setToken }) => {
   };
 
   return (
+    <div className="login-wrapper">
+         {/* ✅ Header */}
+         <Header />
     <div className="login-container">
       <div className="login-box">
         <h2>Login</h2>
@@ -52,6 +57,9 @@ const Login = ({ setToken }) => {
           <button type="submit">Login</button>
         </form>
       </div>
+    </div>
+    {/* ✅ Footer */}
+    <Footer />
     </div>
   );
 };
