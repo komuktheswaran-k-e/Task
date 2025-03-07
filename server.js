@@ -116,7 +116,7 @@ const Log = sequelize.define(
       type: DataTypes.DATE, // ✅ Stores both date and time
       allowNull: true 
     },
-    macAddress: {  // ✅ Add MAC Address field
+    ipAddress: {  // ✅ Add MAC Address field
       type: DataTypes.STRING,
       allowNull: true,
     },
@@ -272,15 +272,24 @@ app.post("/api/login", async (req, res) => {
     // Generate JWT token
     const token = jwt.sign({ userID: user.userID, username: user.username }, "secretkey", { expiresIn: "1h" });
 
-    const macAddr = await macaddress.one();
-    console.log("MAC Address:", macAddr);
+    let clientIp =
+      req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress;
 
+    // If IP is "::1" (IPv6 localhost), convert to "127.0.0.1"
+    if (clientIp === "::1") {
+      clientIp = "127.0.0.1";
+    }
+
+    console.log("Client IP Address:", clientIp);
+
+    // Store IP instead of MAC Address
     const logEntry = await Log.create({
-      employeeID: user.username,
+      employeeID: req.body.username,
       logDate: moment().format("YYYY-MM-DD"), // ✅ Local Date
-      loginTime:Sequelize.literal("FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss')"),// ✅ Local Time
-      macAddress: macAddr, 
+      loginTime: Sequelize.literal("FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss')"),
+      ipAddress: clientIp, // ✅ Capture and store IP
     });
+  
     
     
     res.json({

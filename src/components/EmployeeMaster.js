@@ -2,7 +2,12 @@ import React, { useState } from "react";
 import "./EmployeeMaster.css"; // Import CSS for styling
 
 const EmployeeMaster = () => {
-  const [formData, setFormData] = useState({ employeeName: "" });
+  const [formData, setFormData] = useState({
+    employeeName: "",
+    username: "",
+    password: "",
+  });
+
   const [employees, setEmployees] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
 
@@ -24,7 +29,7 @@ const EmployeeMaster = () => {
       // Add new employee
       setEmployees([...employees, formData]);
     }
-    setFormData({ employeeName: "" });
+    setFormData({ employeeName: "", username: "", password: "" });
   };
 
   // Handle Edit
@@ -38,7 +43,7 @@ const EmployeeMaster = () => {
     const updatedEmployees = employees.filter((_, i) => i !== index);
     setEmployees(updatedEmployees);
     if (editingIndex === index) {
-      setFormData({ employeeName: "" });
+      setFormData({ employeeName: "", username: "", password: "" });
       setEditingIndex(null);
     }
   };
@@ -58,6 +63,28 @@ const EmployeeMaster = () => {
             required
           />
         </div>
+        <div className="form-group">
+          <label>Username:</label>
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            placeholder="Enter Username"
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Password:</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            placeholder="Enter Password"
+            onChange={handleChange}
+            required
+          />
+        </div>
         <div className="form-group full-width">
           <button type="submit">{editingIndex !== null ? "Update" : "Submit"}</button>
         </div>
@@ -70,6 +97,8 @@ const EmployeeMaster = () => {
             <thead>
               <tr>
                 <th>Employee Name</th>
+                <th>Username</th>
+                <th>Password</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -77,6 +106,8 @@ const EmployeeMaster = () => {
               {employees.map((employee, index) => (
                 <tr key={index}>
                   <td>{employee.employeeName}</td>
+                  <td>{employee.username}</td>
+                  <td>{employee.password}</td>
                   <td>
                     <button onClick={() => handleEdit(index)}>Edit</button>
                     <button onClick={() => handleDelete(index)} className="delete-btn">Delete</button>

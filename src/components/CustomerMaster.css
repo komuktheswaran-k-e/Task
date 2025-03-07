@@ -1,5 +1,3 @@
-
-
 .customer-container {
   max-width: 400px;
   margin: auto;
@@ -54,9 +52,36 @@ button:hover {
   background-color: #0056b3;
 }
 
+/* Make the customer list container responsive */
 .customer-list-container {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: baseline;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto; /* Horizontal scrollbar */
+  overflow-y: auto; /* Vertical scrollbar */
+  padding: 40px;
+}
+
+/* Add responsiveness for smaller screens */
+@media screen and (max-width: 600px) {
+  .customer-container {
+    max-width: 100%;
+    padding: 15px;
+  }
+  
+  .customer-form {
+    grid-template-columns: 1fr; /* Stack form fields on smaller screens */
+  }
+
+  .full-width {
+    grid-column: span 1; /* Adjust full-width to span 1 column on small screens */
+  }
+
+  /* Ensure scroll container adjusts with the screen size */
+  .customer-list-container {
+    padding: 5px;
+  }
 }

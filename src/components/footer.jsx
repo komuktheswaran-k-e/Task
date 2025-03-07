@@ -18,7 +18,7 @@ const Footer = () => {
     }, []);
   
     return (
-      <footer className="bg-black text-white text-center p-4 mt-auto w-full">
+      <footer className="">
         {footerText || "Loading..."}
       </footer>
     );

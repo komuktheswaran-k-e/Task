@@ -10,6 +10,9 @@ import JobTypeMaster from "./components/JobTypeMaster";
 import EmployeeMaster from "./components/EmployeeMaster";
 import CustomerJobMaster from "./components/CustomerJobMaster";
 import ProtectedRoute from "./components/ProtectedRoute";
+import "./menu.css"; // Assuming CSS is placed here
+import Header from "./components/header";
+import Footer from "./components/footer";
 
 const App = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -44,48 +47,60 @@ const App = () => {
     const handleTabClose = () => {
       const logID = localStorage.getItem("logID");
       if (!logID) return;
-  
+
       const logoutURL = "http://localhost:5000/api/logout";
       const data = JSON.stringify({ logID });
-  
+
       navigator.sendBeacon(logoutURL, data);
-  
+
       // ✅ Remove token & Update State
       localStorage.removeItem("logID");
       localStorage.removeItem("token");
       setToken(null); // ✅ Update state to reflect logout
     };
-  
+
     window.addEventListener("beforeunload", handleTabClose);
-  
+
     return () => {
       window.removeEventListener("beforeunload", handleTabClose);
     };
   }, []);
-  
+
+  // Function to close the menu when an option is clicked
+  const handleMenuClick = () => {
+    setMenuOpen(false);
+  };
 
   return (
     <div className="container">
+       {/* ✅ Header */}
+       <Header />
       {/* ✅ Show Menu & Logout Only If Logged In */}
       {token ? (
         <>
           <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)}>
             ☰ Menu
           </button>
+
           {menuOpen && (
-            <nav className="menu">
+            <nav className={`menu ${menuOpen ? 'menuOpen' : ''}`}>
+              {/* Close button to close the menu */}
+              <button className="close-menu-button" onClick={handleMenuClick}>
+                ✖
+              </button>
+
               <ul>
-                <li><Link to="/customer">Customer details</Link></li>
-                <li><Link to="/state">State Master</Link></li>
-                <li><Link to="/country">Country Master</Link></li>
-                <li><Link to="/employee">Employee Master</Link></li>
-                <li><Link to="/job-type">Job Type Master</Link></li>
-                <li><Link to="/job">Job Master</Link></li>
-                <li><Link to="/customer-job">Customer Job Master</Link></li>
-                <li><Link to="/audit-filing">Audit Filing Master</Link></li>
+                <li><Link to="/customer" onClick={handleMenuClick}>Customer details</Link></li>
+                <li><Link to="/state" onClick={handleMenuClick}>State Master</Link></li>
+                <li><Link to="/country" onClick={handleMenuClick}>Country Master</Link></li>
+                <li><Link to="/employee" onClick={handleMenuClick}>Employee Master</Link></li>
+                <li><Link to="/job-type" onClick={handleMenuClick}>Job Type Master</Link></li>
+                <li><Link to="/job" onClick={handleMenuClick}>Job Master</Link></li>
+                <li><Link to="/customer-job" onClick={handleMenuClick}>Customer Job Master</Link></li>
               </ul>
             </nav>
           )}
+
           <button className="logout-button" onClick={handleLogout}>
             Logout
           </button>
@@ -102,9 +117,12 @@ const App = () => {
           <Route path="/job-type" element={<ProtectedRoute><JobTypeMaster /></ProtectedRoute>} />
           <Route path="/job" element={<ProtectedRoute><JobMaster /></ProtectedRoute>} />
           <Route path="/customer-job" element={<ProtectedRoute><CustomerJobMaster /></ProtectedRoute>} />
-          <Route path="/audit-filing" element={<ProtectedRoute><div>Audit Filing Master</div></ProtectedRoute>} />
         </Routes>
       </div>
+       <div>
+        {/* ✅ Footer */}
+       <Footer />
+       </div>
     </div>
   );
 };
