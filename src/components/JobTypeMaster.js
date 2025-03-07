@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./jobMaster.css";
+import Header from "./header";
+import Footer from "./footer";
 
 const JobMaster = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +13,7 @@ const JobMaster = () => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingJobId, setEditingJobId] = useState(null);
 
-  const API_URL = "/api/jobtypes"; // Adjust if your backend runs on a different port
+  const API_URL = "https://103.38.50.149:5001/api/jobtypes"; // Adjust if your backend runs on a different port
 
   // **Fetch Job Types from API**
   useEffect(() => {
@@ -74,6 +76,8 @@ const JobMaster = () => {
 
   return (
     <div className="job-container">
+      {/* ✅ Header */}
+      <Header />
       <h2>Job Type Master</h2>
       <form className="job-form" onSubmit={handleSubmit}>
         <div className="form-group">
@@ -129,6 +133,9 @@ const JobMaster = () => {
           </table>
         </div>
       )}
+
+      {/* ✅ Footer */}
+      <Footer />
     </div>
   );
 };

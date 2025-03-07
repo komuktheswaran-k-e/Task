@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./CountryMaster.css";
 
+import Header from "./header";
+import Footer from "./footer";
+
 const CountryMaster = () => {
   const [formData, setFormData] = useState({ CountryID: "", CountryName: "" });
   const [countries, setCountries] = useState([]);
@@ -17,7 +20,9 @@ const CountryMaster = () => {
   const fetchCountries = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("api/countries");
+      const response = await axios.get(
+        "https://103.38.50.149:5001/api/countries"
+      );
       setCountries(response.data);
       setLoading(false);
     } catch (error) {
@@ -81,7 +86,9 @@ const CountryMaster = () => {
     }
 
     try {
-      await axios.delete(`api/countries/${CountryID}`);
+      await axios.delete(
+        `https://103.38.50.149:5001/api/countries/${CountryID}`
+      );
       setMessage("Country deleted successfully!");
       fetchCountries(); // Refresh the list
     } catch (error) {
@@ -92,6 +99,8 @@ const CountryMaster = () => {
 
   return (
     <div className="country-container">
+      {/* ✅ Header */}
+      <Header />
       <h2>Country Master</h2>
       {message && <p className="message">{message}</p>}
 
@@ -145,6 +154,9 @@ const CountryMaster = () => {
           </div>
         )
       )}
+
+      {/* ✅ Footer */}
+      <Footer />
     </div>
   );
 };

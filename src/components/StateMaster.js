@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./state.css";
+import Header from "./header";
+import Footer from "./footer";
 
 const StateMaster = () => {
   const [formData, setFormData] = useState({
@@ -27,7 +29,7 @@ const StateMaster = () => {
 
   const fetchStates = async () => {
     try {
-      const response = await axios.get("/api/states");
+      const response = await axios.get("https://103.38.50.149:5001/api/states");
       setStates(response.data);
       console.log("Fetched States:", response.data);
     } catch (error) {
@@ -37,7 +39,9 @@ const StateMaster = () => {
 
   const fetchCountries = async () => {
     try {
-      const response = await axios.get("/api/countries");
+      const response = await axios.get(
+        "https://103.38.50.149:5001/api/countries"
+      );
       setCountries(response.data);
       console.log("Fetched Countries:", response.data);
     } catch (error) {
@@ -60,10 +64,16 @@ const StateMaster = () => {
 
     try {
       if (editingStateID) {
-        await axios.put(`api/states/${editingStateID}`, updatedState);
+        await axios.put(
+          `https://103.38.50.149:5001/api/states/${editingStateID}`,
+          updatedState
+        );
         setMessage("State updated successfully!");
       } else {
-        await axios.post("api/states", selectedState);
+        await axios.post(
+          "https://103.38.50.149:5001/api/states",
+          selectedState
+        );
         setMessage("State added successfully!");
       }
 
@@ -94,7 +104,7 @@ const StateMaster = () => {
 
     console.log("Deleting state with ID:", stateID);
     try {
-      await axios.delete(`api/states/${stateID}`);
+      await axios.delete(`https://103.38.50.149:5001/api/states/${stateID}`);
       setMessage("State deleted successfully!");
       fetchStates();
     } catch (error) {
@@ -105,6 +115,8 @@ const StateMaster = () => {
 
   return (
     <div className="state-container">
+      {/* ✅ Header */}
+      <Header />
       <h2>State Master</h2>
       {message && <p className="message">{message}</p>}
 
@@ -178,6 +190,9 @@ const StateMaster = () => {
           </table>
         </div>
       )}
+
+      {/* ✅ Footer */}
+      <Footer />
     </div>
   );
 };

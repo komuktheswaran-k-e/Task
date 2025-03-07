@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./jobtype.css";
+import Header from "./header";
+import Footer from "./footer";
 
 const JobMaster = () => {
   const [formData, setFormData] = useState({
@@ -21,14 +23,14 @@ const JobMaster = () => {
 
   const fetchJobTypes = () => {
     axios
-      .get("api/jobtypes")
+      .get("https://103.38.50.149:5001/api/jobtypes")
       .then((response) => setJobTypes(response.data))
       .catch((error) => console.error("Error fetching job types:", error));
   };
 
   const fetchJobs = () => {
     axios
-      .get("api/jobs")
+      .get("https://103.38.50.149:5001/api/jobs")
       .then((response) => setJobs(response.data))
       .catch((error) => console.error("Error fetching jobs:", error));
   };
@@ -56,7 +58,7 @@ const JobMaster = () => {
     if (editingIndex !== null) {
       const jobId = jobs[editingIndex]?.jobID || jobs[editingIndex]?.id;
       axios
-        .put(`/api/jobs/${jobId}`, newJob)
+        .put(`https://103.38.50.149:5001/api/jobs/${jobId}`, newJob)
         .then(() => {
           fetchJobs(); // Fetch updated job list
           resetForm();
@@ -64,7 +66,7 @@ const JobMaster = () => {
         .catch((error) => console.error("Error updating job:", error));
     } else {
       axios
-        .post("/api/jobs", newJob)
+        .post("https://103.38.50.149:5001/api/jobs", newJob)
         .then(() => {
           fetchJobs(); // Fetch updated job list
           resetForm();
@@ -97,13 +99,15 @@ const JobMaster = () => {
   const handleDelete = (index) => {
     const jobId = jobs[index]?.jobID || jobs[index]?.id;
     axios
-      .delete(`/api/jobs/${jobId}`)
+      .delete(`https://103.38.50.149:5001/api/jobs/${jobId}`)
       .then(() => fetchJobs()) // Fetch updated job list
       .catch((error) => console.error("Error deleting job:", error));
   };
 
   return (
     <div className="jobtype-container">
+      {/* ✅ Header */}
+      <Header />
       <h2>Job Master</h2>
       <form className="jobtype-form" onSubmit={handleSubmit}>
         <div className="form-group">
@@ -207,6 +211,9 @@ const JobMaster = () => {
           </table>
         </div>
       )}
+
+      {/* ✅ Footer */}
+      <Footer />
     </div>
   );
 };

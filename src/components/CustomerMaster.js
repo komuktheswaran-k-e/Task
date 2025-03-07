@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./CustomerMaster.css";
 import { v4 as uuidv4 } from "uuid";
+import Header from "./header";
+import Footer from "./footer";
 
 const CustomerMaster = () => {
   const [customerID] = useState(uuidv4()); // Generate a unique ID
@@ -34,7 +36,9 @@ const CustomerMaster = () => {
 
   const fetchCountries = async () => {
     try {
-      const response = await axios.get("api/countries");
+      const response = await axios.get(
+        "https://103.38.50.149:5001/api/countries"
+      );
       setCountries(response.data);
     } catch (error) {
       console.error("Error fetching countries:", error);
@@ -45,7 +49,7 @@ const CustomerMaster = () => {
     try {
       console.log("Fetching states for country:", countryID);
       const response = await axios.get(
-        `api/states/${countryID}`
+        `https://103.38.50.149:5001/api/states/${countryID}`
       );
       console.log("States response:", response.data);
       setStates(response.data);
@@ -56,7 +60,9 @@ const CustomerMaster = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get("api/customers");
+      const response = await axios.get(
+        "https://103.38.50.149:5001/api/customers"
+      );
       setCustomers(response.data);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -96,10 +102,13 @@ const CustomerMaster = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("/api/customers", {
-        customerID,
-        ...formData,
-      });
+      const response = await axios.post(
+        "https://103.38.50.149:5001/api/customers",
+        {
+          customerID,
+          ...formData,
+        }
+      );
 
       if (response.data.success) {
         setMessage("Customer added successfully!");
@@ -115,6 +124,8 @@ const CustomerMaster = () => {
 
   return (
     <div>
+      {/* ✅ Header */}
+      <Header />
       {/* Customer Form */}
       <div className="customer-container">
         <h2>Customer Details</h2>
@@ -319,6 +330,9 @@ const CustomerMaster = () => {
           </tbody>
         </table>
       </div>
+
+      {/* ✅ Footer */}
+      <Footer />
     </div>
   );
 };
