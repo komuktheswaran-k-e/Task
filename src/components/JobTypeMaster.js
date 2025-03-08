@@ -11,7 +11,7 @@ const JobMaster = () => {
 
   const [jobs, setJobs] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
-  const [editingJobId, setEditingJobId] = useState(null);
+  const [editingJobTypeId, setEditingJobTypeId] = useState(null);
 
   const API_URL = "https://103.38.50.149:5001/api/jobtypes"; // Adjust if your backend runs on a different port
 
@@ -40,10 +40,10 @@ const JobMaster = () => {
     try {
       if (editingIndex !== null) {
         // **Update Job Type**
-        await axios.put(`${API_URL}/${editingJobId}`, formData);
+        await axios.put(`${API_URL}/${editingJobTypeId}`, formData);
         fetchJobs();
         setEditingIndex(null);
-        setEditingJobId(null);
+        setEditingJobTypeId(null);
       } else {
         // **Create New Job Type**
         await axios.post(API_URL, formData);
@@ -61,7 +61,7 @@ const JobMaster = () => {
     const job = jobs[index];
     setFormData({ jobTypeName: job.jobTypeName });
     setEditingIndex(index);
-    setEditingJobId(job.jobID);
+    setEditingJobTypeId(job.jobTypeID);
   };
 
   // **Handle Delete Job Type**
@@ -76,8 +76,6 @@ const JobMaster = () => {
 
   return (
     <div className="job-container">
-      {/* ✅ Header */}
-      <Header />
       <h2>Job Type Master</h2>
       <form className="job-form" onSubmit={handleSubmit}>
         <div className="form-group">
@@ -111,7 +109,7 @@ const JobMaster = () => {
             </thead>
             <tbody>
               {jobs.map((job, index) => (
-                <tr key={job.jobID}>
+                <tr key={job.jobTypeID}>
                   <td>{job.jobTypeName}</td>
                   <td>
                     <button
@@ -122,7 +120,7 @@ const JobMaster = () => {
                     </button>
                     <button
                       className="delete-btn"
-                      onClick={() => handleDelete(job.jobID)}
+                      onClick={() => handleDelete(job.jobTypeID)}
                     >
                       Delete
                     </button>
@@ -134,8 +132,6 @@ const JobMaster = () => {
         </div>
       )}
 
-      {/* ✅ Footer */}
-      <Footer />
     </div>
   );
 };

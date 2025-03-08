@@ -124,8 +124,6 @@ const CustomerMaster = () => {
 
   return (
     <div>
-      {/* ✅ Header */}
-      <Header />
       {/* Customer Form */}
       <div className="customer-container">
         <h2>Customer Details</h2>
@@ -330,9 +328,6 @@ const CustomerMaster = () => {
           </tbody>
         </table>
       </div>
-
-      {/* ✅ Footer */}
-      <Footer />
     </div>
   );
 };

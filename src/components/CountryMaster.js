@@ -42,17 +42,23 @@ const CountryMaster = () => {
     try {
       if (editingID) {
         // Update existing country
-        const response = await axios.put(`api/countries/${editingID}`, {
-          CountryName: formData.CountryName,
-        });
+        const response = await axios.put(
+          `https://103.38.50.149:5001/api/countries/${editingID}`,
+          {
+            CountryName: formData.CountryName,
+          }
+        );
         if (response.data.success) {
           setMessage("Country updated successfully!");
         }
       } else {
         // Add new country
-        const response = await axios.post("api/countries", {
-          CountryName: formData.CountryName,
-        });
+        const response = await axios.post(
+          "https://103.38.50.149:5001/api/countries",
+          {
+            CountryName: formData.CountryName,
+          }
+        );
         if (response.data.success) {
           setMessage("Country added successfully!");
         }
@@ -97,8 +103,6 @@ const CountryMaster = () => {
 
   return (
     <div className="country-container">
-      {/* ✅ Header */}
-      <Header />
       <h2>Country Master</h2>
       {message && <p className="message">{message}</p>}
 
@@ -153,8 +157,6 @@ const CountryMaster = () => {
         )
       )}
 
-      {/* ✅ Footer */}
-      <Footer />
     </div>
   );
 };

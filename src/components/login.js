@@ -14,14 +14,11 @@ const Login = ({ setToken }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "https://103.38.50.149:5001/api/login",
-        {
-          username,
-          password,
-        }
-      );
-      console.log(response);
+      const response = await axios.post("http://localhost:5001/api/login", {
+        username,
+        password,
+      });
+      console.log("res", response.data);
       if (response.data.success) {
         toast.success("Login Successful!");
         localStorage.setItem("token", response.data.token);

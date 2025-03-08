@@ -106,8 +106,6 @@ const JobMaster = () => {
 
   return (
     <div className="jobtype-container">
-      {/* ✅ Header */}
-      <Header />
       <h2>Job Master</h2>
       <form className="jobtype-form" onSubmit={handleSubmit}>
         <div className="form-group">
@@ -212,8 +210,6 @@ const JobMaster = () => {
         </div>
       )}
 
-      {/* ✅ Footer */}
-      <Footer />
     </div>
   );
 };

@@ -3,9 +3,9 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const moment = require("moment-timezone");
 const sql = require("mssql");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(cors());
@@ -26,71 +26,111 @@ const config = {
   },
 };
 
-// Connection pool management
+// Connection pool
 let pool;
-sql
-  .connect(config)
-  .then((p) => {
-    pool = p;
+async function connectDB() {
+  try {
+    pool = await sql.connect(config);
     console.log("Connected to SQL Server");
-  })
-  .catch((err) => {
+  } catch (err) {
     console.error("Database Connection Error:", err);
-  });
-
-// Helper function for parameterized queries
+  }
+}
+// Proper startup sequence
+connectDB(); // Handle connection failures
+// Execute SQL queries safely
 async function executeQuery(query, inputs = []) {
-  const request = pool.request();
-  inputs.forEach(({ name, type, value }) => request.input(name, type, value));
-  return await request.query(query);
+  await connectDB();
+  try {
+    const request = pool.request();
+    inputs.forEach(({ name, type, value }) => request.input(name, type, value));
+    return await request.query(query);
+  } catch (error) {
+    console.error("SQL Query Error:", error);
+    throw error;
+  }
 }
 
-// ==================== Authentication Endpoints ====================
-app.post("/api/login", async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    const result = await executeQuery(
-      "SELECT * FROM Users WHERE username = @username",
-      [{ name: "username", type: sql.VarChar, value: username }]
-    );
+// ==================== Error Handling ====================
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res
+    .status(500)
+    .json({ error: "Internal Server Error", details: err.message });
+});
 
-    if (!result.recordset.length) {
-      return res.status(400).json({ message: "Invalid credentials" });
+// ==================== Authentication Endpoints ====================
+// ✅ Login API
+app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+  const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+
+  if (!username || !password) {
+    return res
+      .status(400)
+      .json({ success: false, message: "All fields are required" });
+  }
+
+  try {
+    let pool = await sql.connect(config);
+    let userResult = await pool
+      .request()
+      .input("username", sql.VarChar, username)
+      .query("SELECT * FROM Users WHERE username = @username");
+
+    if (userResult.recordset.length === 0) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not found" });
     }
 
-    const user = result.recordset[0];
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword)
-      return res.status(400).json({ message: "Invalid credentials" });
+    const user = userResult.recordset[0];
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
-    const token = jwt.sign({ userId: user.id, username }, "secretkey", {
-      expiresIn: "1h",
-    });
+    if (!passwordMatch) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
+    }
+    const JWT_SECRET = "hello";
 
-    // Create login log
-    const logResult = await executeQuery(
-      `INSERT INTO Logs (employeeID, logDate, loginTime, macAddress)
-       OUTPUT INSERTED.logID
-       VALUES (@employeeID, @logDate, @loginTime, @macAddress)`,
-      [
-        { name: "employeeID", type: sql.VarChar, value: username },
-        {
-          name: "logDate",
-          type: sql.Date,
-          value: moment().format("YYYY-MM-DD"),
-        },
-        { name: "loginTime", type: sql.DateTime, value: moment().toDate() },
-        { name: "macAddress", type: sql.VarChar, value: "00-B0-D0-63-C2-26" },
-      ]
+    if (!JWT_SECRET) {
+      console.error("JWT_SECRET is missing in .env file");
+      return res
+        .status(500)
+        .json({ success: false, message: "Server error: Missing secret key" });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: "1h" }
     );
 
+    // ✅ Fix login time format
+    const logDate = moment().format("YYYY-MM-DD"); // YYYY-MM-DD
+    const loginTime = moment().format("YYYY-MM-DD HH:mm:ss"); // Correct DATETIME format
+
+    let logResult = await pool
+      .request()
+      .input("employeeID", sql.Int, user.id)
+      .input("logDate", sql.Date, logDate)
+      .input("loginTime", sql.DateTime, loginTime)
+      .input("clientIp", sql.VarChar, clientIp)
+      .query(
+        "INSERT INTO Logs (employeeID, logDate, loginTime, clientIp) OUTPUT INSERTED.logID VALUES (@employeeID, @logDate, @loginTime, @clientIp)"
+      );
+
     res.json({
+      success: true,
+      message: "Login successful",
       token,
-      username,
+      username: user.username,
       logID: logResult.recordset[0].logID,
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -101,7 +141,11 @@ app.post("/api/logout", async (req, res) => {
       "UPDATE Logs SET logoutTime = @logoutTime WHERE logID = @logID",
       [
         { name: "logID", type: sql.Int, value: logID },
-        { name: "logoutTime", type: sql.DateTime, value: moment().toDate() },
+        {
+          name: "logoutTime",
+          type: sql.DateTime,
+          value: moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss"),
+        },
       ]
     );
     res.json({ message: "Logout successful" });
@@ -122,6 +166,7 @@ app.get("/api/countries", async (req, res) => {
 });
 
 app.post("/api/countries", async (req, res) => {
+  console.log(req.body);
   try {
     const { CountryName } = req.body;
     await executeQuery(
@@ -130,8 +175,11 @@ app.post("/api/countries", async (req, res) => {
     );
     res.status(201).json({ message: "Country created successfully" });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ error: error.message });
   }
+  console.log("res", res);
+  console.log("req", req);
 });
 
 app.put("/api/countries/:id", async (req, res) => {
@@ -192,16 +240,26 @@ app.get("/api/states/:countryID", async (req, res) => {
 
 app.post("/api/states", async (req, res) => {
   try {
+    console.log("Request received:", req.body); // Log the request body
     const { StateName, CountryID } = req.body;
+
+    if (!StateName || !CountryID) {
+      return res
+        .status(400)
+        .json({ error: "StateName and CountryID are required" });
+    }
+
     await executeQuery(
       "INSERT INTO StateMasters (StateName, CountryID) VALUES (@StateName, @CountryID)",
       [
         { name: "StateName", type: sql.VarChar, value: StateName },
-        { name: "CountryID", type: sql.Int, value: CountryID },
+        { name: "CountryID", type: sql.Int, value: parseInt(CountryID) },
       ]
     );
+
     res.status(201).json({ message: "State created successfully" });
   } catch (error) {
+    console.error("Database error:", error); // Log the actual error
     res.status(500).json({ error: error.message });
   }
 });
@@ -247,21 +305,75 @@ app.get("/api/customers", async (req, res) => {
 });
 
 app.post("/api/customers", async (req, res) => {
+  const {
+    customerID,
+    customerName,
+    address1,
+    address2,
+    address3,
+    city,
+    stateID,
+    countryID,
+    pincode,
+    gstNo,
+    mobileNo,
+    emailID,
+    active,
+    jobName,
+    jobFrequency,
+  } = req.body;
+
+  const transaction = new sql.Transaction(pool);
   try {
-    const { customerID, customerName, mobileNo } = req.body;
-    await executeQuery(
-      `INSERT INTO CustomerMasters 
-       (customerID, customerName, mobileNo)
-       VALUES (@customerID, @customerName, @mobileNo)`,
-      [
-        { name: "customerID", type: sql.VarChar, value: customerID },
-        { name: "customerName", type: sql.VarChar, value: customerName },
-        { name: "mobileNo", type: sql.VarChar, value: mobileNo },
-      ]
-    );
-    res.status(201).json({ message: "Customer created successfully" });
+    await transaction.begin();
+
+    // Insert into CustomerMasters
+    const customerQuery = `
+      INSERT INTO dbo.CustomerMasters 
+      (CustomerID, CustomerName, Address1, Address2, Address3, City, StateID, CountryID, 
+       Pincode, GSTNo, MobileNo, EmailID, Active)
+      VALUES (@CustomerID, @CustomerName, @Address1, @Address2, @Address3, @City, 
+              @StateID, @CountryID, @Pincode, @GSTNo, @MobileNo, @EmailID, @Active)
+    `;
+
+    await transaction
+      .request()
+      .input("CustomerID", sql.VarChar, customerID)
+      .input("CustomerName", sql.NVarChar, customerName)
+      .input("Address1", sql.NVarChar, address1)
+      .input("Address2", sql.NVarChar, address2)
+      .input("Address3", sql.NVarChar, address3)
+      .input("City", sql.NVarChar, city)
+      .input("StateID", sql.Int, stateID)
+      .input("CountryID", sql.Int, countryID)
+      .input("Pincode", sql.NVarChar, pincode)
+      .input("GSTNo", sql.NVarChar, gstNo)
+      .input("MobileNo", sql.NVarChar, mobileNo)
+      .input("EmailID", sql.NVarChar, emailID)
+      .input("Active", sql.Char, active)
+      .query(customerQuery);
+
+    // Insert into CustomerJobMaster if Job Name & Frequency provided
+    if (jobName && jobFrequency) {
+      const jobQuery = `
+        INSERT INTO dbo.CustomerJobMaster (CustomerID, JobName, JobFrequency)
+        VALUES (@CustomerID, @JobName, @JobFrequency)
+      `;
+
+      await transaction
+        .request()
+        .input("CustomerID", sql.VarChar, customerID)
+        .input("JobName", sql.NVarChar, jobName)
+        .input("JobFrequency", sql.NVarChar, jobFrequency)
+        .query(jobQuery);
+    }
+
+    await transaction.commit();
+    res.json({ success: true, message: "Customer added successfully!" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    await transaction.rollback();
+    console.error("Error adding customer:", error);
+    res.status(500).json({ error: "Failed to add customer" });
   }
 });
 
@@ -287,6 +399,45 @@ app.post("/api/jobtypes", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+app.put("/api/jobtypes/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { jobTypeName } = req.body;
+
+    await executeQuery(
+      "UPDATE JobTypeMasters SET jobTypeName = @jobTypeName WHERE jobTypeID = @id",
+      [
+        { name: "jobTypeName", type: sql.VarChar, value: jobTypeName },
+        { name: "id", type: sql.Int, value: id },
+      ]
+    );
+
+    res.json({ message: "Job type updated successfully" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: error.message });
+  }
+  console.log("req", req);
+  console.log("res", res);
+});
+
+app.delete("/api/jobtypes/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await executeQuery("DELETE FROM JobTypeMasters WHERE jobTypeID = @id", [
+      { name: "id", type: sql.Int, value: id },
+    ]);
+
+    res.json({ message: "Job type deleted successfully" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ error: error.message });
+  }
+  console.log("req", req);
+  console.log("res", res);
 });
 
 // Jobs
@@ -323,6 +474,121 @@ app.post("/api/jobs", async (req, res) => {
   }
 });
 
+app.put("/api/jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { jobTypeID, jobName, frequency, recurringDate } = req.body;
+
+    await executeQuery(
+      `UPDATE JobMasters 
+       SET jobTypeID = @jobTypeID, 
+           jobName = @jobName, 
+           frequency = @frequency, 
+           recurringDate = @recurringDate
+       WHERE jobID = @id`,
+      [
+        { name: "jobTypeID", type: sql.Int, value: jobTypeID },
+        { name: "jobName", type: sql.VarChar, value: jobName },
+        { name: "frequency", type: sql.VarChar, value: frequency },
+        { name: "recurringDate", type: sql.DateTime, value: recurringDate },
+        { name: "id", type: sql.Int, value: id },
+      ]
+    );
+
+    res.json({ message: "Job updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await executeQuery("DELETE FROM JobMasters WHERE jobID = @id", [
+      { name: "id", type: sql.Int, value: id },
+    ]);
+
+    res.json({ message: "Job deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ Get All Users (Employees)
+app.get("/api/employees", async (req, res) => {
+  try {
+    const result = await executeQuery(
+      "SELECT id, username, employeeName FROM Users"
+    );
+    res.json(result.recordset);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ Add User (Employee)
+app.post("/api/employees", async (req, res) => {
+  try {
+    const { username, password, employeeName } = req.body;
+    await executeQuery(
+      `INSERT INTO Users (username, password, employeeName) 
+       VALUES (@username, @password, @employeeName)`,
+      [
+        { name: "username", type: sql.VarChar, value: username },
+        { name: "password", type: sql.VarChar, value: password },
+        { name: "employeeName", type: sql.VarChar, value: employeeName },
+      ]
+    );
+    res.status(201).json({ message: "Employee added successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ Update User (Employee)
+app.put("/api/employees/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, password, employeeName } = req.body;
+
+    let query = `UPDATE Users 
+                 SET username = @username, 
+                     employeeName = @employeeName`;
+
+    const params = [
+      { name: "username", type: sql.VarChar, value: username },
+      { name: "employeeName", type: sql.VarChar, value: employeeName },
+      { name: "id", type: sql.Int, value: id },
+    ];
+
+    if (password) {
+      query += `, password = @password`;
+      params.push({ name: "password", type: sql.VarChar, value: password });
+    }
+
+    query += ` WHERE id = @id`;
+
+    await executeQuery(query, params);
+    res.json({ message: "Employee updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ Delete User (Employee)
+app.delete("/api/employees/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await executeQuery("DELETE FROM Users WHERE id = @id", [
+      { name: "id", type: sql.Int, value: id },
+    ]);
+    res.json({ message: "Employee deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== Customer Jobs Endpoints ====================
 app.get("/api/customer-jobs", async (req, res) => {
   try {
@@ -339,23 +605,109 @@ app.get("/api/customer-jobs", async (req, res) => {
   }
 });
 
-// ==================== Company Endpoints ====================
+app.post("/api/customer-jobs", async (req, res) => {
+  try {
+    const { customerID, jobID, jobFrequency, jobDate, employeeID } = req.body;
+
+    // Validate request body
+    if (!customerID || !jobID || !jobFrequency || !jobDate || !employeeID) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    await executeQuery(
+      `INSERT INTO CustomerJobMaster (customerID, jobID, jobFrequency, jobDate, employeeID) 
+       VALUES (@customerID, @jobID, @jobFrequency, @jobDate, @employeeID)`,
+      [
+        { name: "customerID", type: sql.NVarChar, value: customerID },
+        { name: "jobID", type: sql.Int, value: jobID },
+        { name: "jobFrequency", type: sql.VarChar, value: jobFrequency },
+        { name: "jobDate", type: sql.Date, value: jobDate },
+        { name: "employeeID", type: sql.Int, value: employeeID },
+      ]
+    );
+
+    res.status(201).json({ message: "Customer job created successfully" });
+  } catch (error) {
+    console.error("Error in /api/customer-jobs:", error);
+    res.status(500).json({ error: error.message });
+  }
+  console.log("req", req);
+  console.log("res", res);
+});
+
+// Update a customer job
+app.put("/api/customer-jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { customerID, jobID, jobFrequency, jobDate, employeeID } = req.body;
+
+    if (!customerID || !jobID || !jobFrequency || !jobDate || !employeeID) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    await executeQuery(
+      `UPDATE CustomerJobMaster 
+       SET customerID = @customerID, jobID = @jobID, jobFrequency = @jobFrequency, 
+           jobDate = @jobDate, employeeID = @employeeID
+       WHERE customerJobID = @id`,
+      [
+        { name: "customerID", type: sql.NVarChar, value: customerID },
+        { name: "jobID", type: sql.Int, value: jobID },
+        { name: "jobFrequency", type: sql.VarChar, value: jobFrequency },
+        { name: "jobDate", type: sql.Date, value: jobDate },
+        { name: "employeeID", type: sql.Int, value: employeeID },
+        { name: "id", type: sql.Int, value: id },
+      ]
+    );
+
+    res.json({ message: "Customer job updated successfully" });
+  } catch (error) {
+    console.error("Error in /api/customer-jobs:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a customer job
+app.delete("/api/customer-jobs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await executeQuery(
+      `DELETE FROM CustomerJobMaster WHERE customerJobID = @id`,
+      [{ name: "id", type: sql.Int, value: id }] // ✅ Pass an array with SQL type
+    );
+
+    res.json({ message: "Customer job deleted successfully" });
+  } catch (error) {
+    console.error("Error in /api/customer-jobs:", error);
+    res.status(500).json({ error: error.message });
+  }
+  console.log("req", req);
+  console.log("res", res);
+});
+
+// ==================== Company API ====================
 app.get("/api/company", async (req, res) => {
   try {
     const result = await executeQuery("SELECT * FROM company_details");
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: "Company details not found" });
+    }
     res.json(result.recordset[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ==================== Error Handling ====================
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res
-    .status(500)
-    .json({ error: "Internal Server Error", details: err.message });
+// Add to server.js
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: pool ? "healthy" : "unhealthy",
+    dbConnected: !!pool,
+    uptime: process.uptime(),
+  });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// ==================== Server Setup ====================
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log("Server running on port ${PORT}"));

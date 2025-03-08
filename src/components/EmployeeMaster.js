@@ -1,5 +1,8 @@
-import React, { useState } from "react";
-import "./EmployeeMaster.css"; // Import CSS for styling
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./EmployeeMaster.css";
+
+const API_BASE_URL = "https://103.38.50.149:5001/api/employees"; // Adjust API URL
 
 const EmployeeMaster = () => {
   const [formData, setFormData] = useState({
@@ -9,42 +12,79 @@ const EmployeeMaster = () => {
   });
 
   const [employees, setEmployees] = useState([]);
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingID, setEditingID] = useState(null); // Store Employee ID for update
+
+  // Fetch employees on component mount
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get(API_BASE_URL);
+      console.log("Fetched employees:", response.data); // Debugging line
+      setEmployees(response.data);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+    }
+  };
 
   // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submit
-  const handleSubmit = (e) => {
+  // Handle form submit (Add or Update)
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingIndex !== null) {
-      // Update existing employee
-      const updatedEmployees = [...employees];
-      updatedEmployees[editingIndex] = formData;
-      setEmployees(updatedEmployees);
-      setEditingIndex(null);
-    } else {
-      // Add new employee
-      setEmployees([...employees, formData]);
+
+    try {
+      if (editingID) {
+        // Update Employee
+        await axios.put(`${API_BASE_URL}/${editingID}`, formData);
+      } else {
+        // Add New Employee
+        await axios.post(API_BASE_URL, formData);
+      }
+      fetchEmployees(); // Refresh list
+      resetForm();
+    } catch (error) {
+      console.error("Error saving employee:", error);
     }
+  };
+
+  // Reset Form
+  const resetForm = () => {
     setFormData({ employeeName: "", username: "", password: "" });
+    setEditingID(null);
   };
 
   // Handle Edit
-  const handleEdit = (index) => {
-    setFormData(employees[index]);
-    setEditingIndex(index);
+  const handleEdit = (employee) => {
+    setFormData({
+      employeeName: employee.employeeName,
+      username: employee.username,
+      password: "", // Don't prefill password for security
+    });
+    setEditingID(employee.id); // Store correct Employee ID
   };
 
   // Handle Delete
-  const handleDelete = (index) => {
-    const updatedEmployees = employees.filter((_, i) => i !== index);
-    setEmployees(updatedEmployees);
-    if (editingIndex === index) {
-      setFormData({ employeeName: "", username: "", password: "" });
-      setEditingIndex(null);
+  const handleDelete = async (id) => {
+    if (!id) {
+      console.error("Error: Employee ID is undefined");
+      return;
+    }
+
+    console.log("Deleting employee with ID:", id); // Debugging line
+
+    try {
+      await axios.delete(`${API_BASE_URL}/${id}`);
+      setEmployees((prevEmployees) =>
+        prevEmployees.filter((emp) => emp.id !== id)
+      );
+    } catch (error) {
+      console.error("Error deleting employee:", error);
     }
   };
 
@@ -82,13 +122,16 @@ const EmployeeMaster = () => {
             value={formData.password}
             placeholder="Enter Password"
             onChange={handleChange}
-            required
+            required={!editingID} // Password required only for new users
           />
         </div>
         <div className="form-group full-width">
-          <button type="submit">
-            {editingIndex !== null ? "Update" : "Submit"}
-          </button>
+          <button type="submit">{editingID ? "Update" : "Submit"}</button>
+          {editingID && (
+            <button type="button" onClick={resetForm}>
+              Cancel
+            </button>
+          )}
         </div>
       </form>
 
@@ -100,20 +143,18 @@ const EmployeeMaster = () => {
               <tr>
                 <th>Employee Name</th>
                 <th>Username</th>
-                <th>Password</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {employees.map((employee, index) => (
-                <tr key={index}>
+              {employees.map((employee) => (
+                <tr key={employee.id}>
                   <td>{employee.employeeName}</td>
                   <td>{employee.username}</td>
-                  <td>{employee.password}</td>
                   <td>
-                    <button onClick={() => handleEdit(index)}>Edit</button>
+                    <button onClick={() => handleEdit(employee)}>Edit</button>
                     <button
-                      onClick={() => handleDelete(index)}
+                      onClick={() => handleDelete(employee.id)}
                       className="delete-btn"
                     >
                       Delete

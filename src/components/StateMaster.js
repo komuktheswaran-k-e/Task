@@ -5,21 +5,15 @@ import Header from "./header";
 import Footer from "./footer";
 
 const StateMaster = () => {
-  const [formData, setFormData] = useState({
-    stateName: "",
-    countryID: "",
+  const [selectedState, setSelectedState] = useState({
+    StateName: "", // ✅ Matches backend field
+    CountryID: "",
   });
 
   const [states, setStates] = useState([]);
   const [countries, setCountries] = useState([]);
   const [editingStateID, setEditingStateID] = useState(null);
   const [message, setMessage] = useState("");
-
-  // ✅ New state to manage selected state during edit
-  const [selectedState, setSelectedState] = useState({
-    stateName: "",
-    CountryID: "",
-  });
 
   // Fetch States and Countries on Load
   useEffect(() => {
@@ -50,16 +44,22 @@ const StateMaster = () => {
   };
 
   const handleChange = (e) => {
-    setSelectedState({ ...selectedState, [e.target.name]: e.target.value });
+    setSelectedState({
+      ...selectedState,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Form Data:", selectedState);
+
+    // ✅ Ensure the correct field names before sending the request
     const updatedState = {
-      StateName: selectedState.stateName, // Ensure it matches backend field
-      CountryID: selectedState.CountryID,
+      StateName: selectedState.StateName, // ✅ Fixing field name issue
+      CountryID: parseInt(selectedState.CountryID, 10), // ✅ Ensure integer
     };
+
     console.log("Updated State:", updatedState);
 
     try {
@@ -70,18 +70,18 @@ const StateMaster = () => {
         );
         setMessage("State updated successfully!");
       } else {
-        await axios.post(
-          "https://103.38.50.149:5001/api/states",
-          selectedState
-        );
+        await axios.post("https://103.38.50.149:5001/api/states", updatedState);
         setMessage("State added successfully!");
       }
 
       fetchStates();
-      setSelectedState({ StateName: "", CountryID: "" });
+      setSelectedState({ StateName: "", CountryID: "" }); // ✅ Reset form properly
       setEditingStateID(null);
     } catch (error) {
       console.error("Error saving state:", error);
+      if (error.response) {
+        console.error("Server Response:", error.response.data);
+      }
       setMessage("Error saving state.");
     }
   };
@@ -89,8 +89,8 @@ const StateMaster = () => {
   const handleEdit = (state) => {
     console.log("Editing state:", state);
     setSelectedState({
-      stateName: state.StateName,
-      CountryID: state.CountryID, // ✅ Use CountryID, not CountryName
+      StateName: state.StateName,
+      CountryID: state.CountryID,
     });
     setEditingStateID(state.StateID);
   };
@@ -115,8 +115,6 @@ const StateMaster = () => {
 
   return (
     <div className="state-container">
-      {/* ✅ Header */}
-      <Header />
       <h2>State Master</h2>
       {message && <p className="message">{message}</p>}
 
@@ -125,8 +123,8 @@ const StateMaster = () => {
         <div className="form-group">
           <input
             type="text"
-            name="stateName"
-            value={selectedState.stateName || ""}
+            name="StateName"
+            value={selectedState.StateName || ""}
             placeholder="Enter State Name"
             onChange={handleChange}
             required
@@ -140,6 +138,7 @@ const StateMaster = () => {
             name="CountryID"
             value={selectedState.CountryID || ""}
             onChange={handleChange}
+            required
           >
             <option value="">Select Country</option>
             {countries.map((country) => (
@@ -191,8 +190,6 @@ const StateMaster = () => {
         </div>
       )}
 
-      {/* ✅ Footer */}
-      <Footer />
     </div>
   );
 };
