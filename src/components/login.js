@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import ".css/com.css";
-import Header from "./header";
-import Footer from "./footer";
+import "./style.css";
+
 import { useNavigate } from "react-router-dom";
 
 const Login = ({ setToken }) => {
@@ -40,8 +39,6 @@ const Login = ({ setToken }) => {
 
   return (
     <div className="login-wrapper">
-      {/* ✅ Header */}
-      <Header />
       <div className="login-container">
         <div className="login-box">
           <h2>Login</h2>
@@ -64,8 +61,6 @@ const Login = ({ setToken }) => {
           </form>
         </div>
       </div>
-      {/* ✅ Footer */}
-      <Footer />
     </div>
   );
 };

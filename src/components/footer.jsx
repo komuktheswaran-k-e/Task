@@ -6,7 +6,7 @@ const Footer = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/company")
+      .get("https://103.38.50.149:5001/api/company")
       .then((response) => {
         if (response.data && response.data.footer) {
           setFooterText(response.data.footer);
@@ -17,11 +17,7 @@ const Footer = () => {
       });
   }, []);
 
-  return (
-    <footer className="bg-black text-white text-center p-4 mt-auto w-full">
-      {footerText || "Loading..."}
-    </footer>
-  );
+  return <footer className="">{footerText || "Loading..."}</footer>;
 };
 
 export default Footer;

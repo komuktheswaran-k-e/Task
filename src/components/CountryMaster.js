@@ -42,19 +42,17 @@ const CountryMaster = () => {
     try {
       if (editingID) {
         // Update existing country
-        const response = await axios.put(
-          `api/countries/${editingID}`,
-          { CountryName: formData.CountryName }
-        );
+        const response = await axios.put(`api/countries/${editingID}`, {
+          CountryName: formData.CountryName,
+        });
         if (response.data.success) {
           setMessage("Country updated successfully!");
         }
       } else {
         // Add new country
-        const response = await axios.post(
-          "api/countries",
-          { CountryName: formData.CountryName }
-        );
+        const response = await axios.post("api/countries", {
+          CountryName: formData.CountryName,
+        });
         if (response.data.success) {
           setMessage("Country added successfully!");
         }

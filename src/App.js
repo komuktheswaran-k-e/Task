@@ -10,6 +10,9 @@ import JobTypeMaster from "./components/JobTypeMaster";
 import EmployeeMaster from "./components/EmployeeMaster";
 import CustomerJobMaster from "./components/CustomerJobMaster";
 import ProtectedRoute from "./components/ProtectedRoute";
+import "./menu.css"; // Assuming CSS is placed here
+import Header from "./components/header";
+import Footer from "./components/footer";
 
 const App = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,9 +29,10 @@ const App = () => {
     }
 
     try {
-      const response = await axios.post("/api/logout", {
-        logID,
-      });
+      const response = await axios.post(
+        "https://103.38.50.149:5001/api/logout",
+        { logID }
+      );
       console.log("Logout response:", response.data);
 
       // Clear localStorage & Update State
@@ -47,7 +51,7 @@ const App = () => {
       const logID = localStorage.getItem("logID");
       if (!logID) return;
 
-      const logoutURL = "api/logout";
+      const logoutURL = "https://103.38.50.149:5001/api/logout";
       const data = JSON.stringify({ logID });
 
       navigator.sendBeacon(logoutURL, data);
@@ -65,8 +69,15 @@ const App = () => {
     };
   }, []);
 
+  // Function to close the menu when an option is clicked
+  const handleMenuClick = () => {
+    setMenuOpen(false);
+  };
+
   return (
     <div className="container">
+      {/* ✅ Header */}
+      <Header />
       {/* ✅ Show Menu & Logout Only If Logged In */}
       {token ? (
         <>
@@ -76,33 +87,54 @@ const App = () => {
           >
             ☰ Menu
           </button>
+
           {menuOpen && (
-            <nav className="menu">
+            <nav className={`menu ${menuOpen ? "menuOpen" : ""}`}>
+              {/* Close button to close the menu */}
+              <button className="close-menu-button" onClick={handleMenuClick}>
+                ✖
+              </button>
+
               <ul>
                 <li>
-                  <Link to="/customer">Customer details</Link>
+                  <Link to="/customer" onClick={handleMenuClick}>
+                    Customer details
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/state">State Master</Link>
+                  <Link to="/state" onClick={handleMenuClick}>
+                    State Master
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/country">Country Master</Link>
+                  <Link to="/country" onClick={handleMenuClick}>
+                    Country Master
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/employee">Employee Master</Link>
+                  <Link to="/employee" onClick={handleMenuClick}>
+                    Employee Master
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/job-type">Job Type Master</Link>
+                  <Link to="/job-type" onClick={handleMenuClick}>
+                    Job Type Master
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/job">Job Master</Link>
+                  <Link to="/job" onClick={handleMenuClick}>
+                    Job Master
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/customer-job">Customer Job Master</Link>
+                  <Link to="/customer-job" onClick={handleMenuClick}>
+                    Customer Job Master
+                  </Link>
                 </li>
               </ul>
             </nav>
           )}
+
           <button className="logout-button" onClick={handleLogout}>
             Logout
           </button>
@@ -168,15 +200,11 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/audit-filing"
-            element={
-              <ProtectedRoute>
-                <div>Audit Filing Master</div>
-              </ProtectedRoute>
-            }
-          />
         </Routes>
+      </div>
+      <div>
+        {/* ✅ Footer */}
+        <Footer />
       </div>
     </div>
   );
