@@ -86,7 +86,9 @@ const EmployeeMaster = () => {
           />
         </div>
         <div className="form-group full-width">
-          <button type="submit">{editingIndex !== null ? "Update" : "Submit"}</button>
+          <button type="submit">
+            {editingIndex !== null ? "Update" : "Submit"}
+          </button>
         </div>
       </form>
 
@@ -110,7 +112,12 @@ const EmployeeMaster = () => {
                   <td>{employee.password}</td>
                   <td>
                     <button onClick={() => handleEdit(index)}>Edit</button>
-                    <button onClick={() => handleDelete(index)} className="delete-btn">Delete</button>
+                    <button
+                      onClick={() => handleDelete(index)}
+                      className="delete-btn"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}

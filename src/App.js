@@ -29,7 +29,7 @@ const App = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/api/logout", { logID });
+      const response = await axios.post("https://103.38.50.149:5001/api/logout", { logID });
       console.log("Logout response:", response.data);
 
       // Clear localStorage & Update State
@@ -46,9 +46,10 @@ const App = () => {
   useEffect(() => {
     const handleTabClose = () => {
       const logID = localStorage.getItem("logID");
+      console.log("Stored Token in useEffect:", logID);
       if (!logID) return;
 
-      const logoutURL = "http://localhost:5000/api/logout";
+      const logoutURL = "https://103.38.50.149:5001/api/logout";
       const data = JSON.stringify({ logID });
 
       navigator.sendBeacon(logoutURL, data);

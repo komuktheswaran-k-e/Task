@@ -6,7 +6,7 @@ const Footer = () => {
   
     useEffect(() => {
       axios
-        .get("http://localhost:5000/api/company")
+        .get("https://103.38.50.149:5001/api/company")
         .then((response) => {
           if (response.data && response.data.footer) {
             setFooterText(response.data.footer);

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./CountryMaster.css";
 
+
+
 const CountryMaster = () => {
   const [formData, setFormData] = useState({ CountryID: "", CountryName: "" });
   const [countries, setCountries] = useState([]);
@@ -17,7 +19,9 @@ const CountryMaster = () => {
   const fetchCountries = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/countries");
+      const response = await axios.get(
+        "https://103.38.50.149:5001/api/countries"
+      );
       setCountries(response.data);
       setLoading(false);
     } catch (error) {
@@ -37,19 +41,17 @@ const CountryMaster = () => {
     try {
       if (editingID) {
         // Update existing country
-        const response = await axios.put(
-          `http://localhost:5000/api/countries/${editingID}`,
-          { CountryName: formData.CountryName }
-        );
+        const response = await axios.put(`api/countries/${editingID}`, {
+          CountryName: formData.CountryName,
+        });
         if (response.data.success) {
           setMessage("Country updated successfully!");
         }
       } else {
         // Add new country
-        const response = await axios.post(
-          "http://localhost:5000/api/countries",
-          { CountryName: formData.CountryName }
-        );
+        const response = await axios.post("api/countries", {
+          CountryName: formData.CountryName,
+        });
         if (response.data.success) {
           setMessage("Country added successfully!");
         }
@@ -81,7 +83,9 @@ const CountryMaster = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:5000/api/countries/${CountryID}`);
+      await axios.delete(
+        `https://103.38.50.149:5001/api/countries/${CountryID}`
+      );
       setMessage("Country deleted successfully!");
       fetchCountries(); // Refresh the list
     } catch (error) {
@@ -92,6 +96,7 @@ const CountryMaster = () => {
 
   return (
     <div className="country-container">
+     
       <h2>Country Master</h2>
       {message && <p className="message">{message}</p>}
 
@@ -145,6 +150,8 @@ const CountryMaster = () => {
           </div>
         )
       )}
+
+     
     </div>
   );
 };

@@ -3,6 +3,7 @@ import axios from "axios";
 import "./CustomerMaster.css";
 import { v4 as uuidv4 } from "uuid";
 
+
 const CustomerMaster = () => {
   const [customerID] = useState(uuidv4()); // Generate a unique ID
   const [formData, setFormData] = useState({
@@ -34,7 +35,9 @@ const CustomerMaster = () => {
 
   const fetchCountries = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/countries");
+      const response = await axios.get(
+        "https://103.38.50.149:5001/api/countries"
+      );
       setCountries(response.data);
     } catch (error) {
       console.error("Error fetching countries:", error);
@@ -45,7 +48,7 @@ const CustomerMaster = () => {
     try {
       console.log("Fetching states for country:", countryID);
       const response = await axios.get(
-        `http://localhost:5000/api/states/${countryID}`
+        `https://103.38.50.149:5001/api/states/${countryID}`
       );
       console.log("States response:", response.data);
       setStates(response.data);
@@ -56,7 +59,9 @@ const CustomerMaster = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/customers");
+      const response = await axios.get(
+        "https://103.38.50.149:5001/api/customers"
+      );
       setCustomers(response.data);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -96,10 +101,13 @@ const CustomerMaster = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:5000/api/customers", {
-        customerID,
-        ...formData,
-      });
+      const response = await axios.post(
+        "https://103.38.50.149:5001/api/customers",
+        {
+          customerID,
+          ...formData,
+        }
+      );
 
       if (response.data.success) {
         setMessage("Customer added successfully!");
@@ -115,7 +123,7 @@ const CustomerMaster = () => {
 
   return (
     <div>
-      {/* Customer Form */}
+      
       <div className="customer-container">
         <h2>Customer Details</h2>
         {message && <p className="message">{message}</p>}
@@ -319,6 +327,8 @@ const CustomerMaster = () => {
           </tbody>
         </table>
       </div>
+
+      
     </div>
   );
 };
