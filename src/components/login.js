@@ -14,10 +14,20 @@ const Login = ({ setToken }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:5001/api/login", {
-        username,
-        password,
-      });
+      // Get the client IP address
+      const ipResponse = await axios.get("https://api64.ipify.org?format=json");
+      const clientIp = ipResponse.data.ip;
+
+      // Send login request with client IP
+      const response = await axios.post(
+        "https://103.38.50.149:5001/api/login",
+        {
+          username,
+          password,
+          clientIp, // Attach IP address
+        }
+      );
+
       console.log("res", response.data);
       if (response.data.success) {
         toast.success("Login Successful!");

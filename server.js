@@ -113,7 +113,7 @@ app.post("/api/login", async (req, res) => {
 
     let logResult = await pool
       .request()
-      .input("employeeID", sql.Int, user.id)
+      .input("employeeID", sql.VarChar, user.username)
       .input("logDate", sql.Date, logDate)
       .input("loginTime", sql.DateTime, loginTime)
       .input("clientIp", sql.VarChar, clientIp)
